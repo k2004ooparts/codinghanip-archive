@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>내 제작물 모음</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181b25;
+    --surface-hover: #1f2330;
+    --border: #2a2f3f;
+    --text: #e8eaf0;
+    --text-dim: #9aa0b0;
+    --accent: #6c8cff;
+    --accent-hover: #8aa4ff;
+    --danger: #ff6b6b;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f4f5f8;
+      --surface: #ffffff;
+      --surface-hover: #f0f2f8;
+      --border: #e2e5ee;
+      --text: #1b1e28;
+      --text-dim: #6b7280;
+      --accent: #4f6ef7;
+      --accent-hover: #3d5ce5;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 36px; }
+  header h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; }
+  header p { color: var(--text-dim); margin-top: 8px; font-size: 0.95rem; }
+
+  /* 추가 폼 */
+  .add-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .add-form .full { grid-column: 1 / -1; }
+  .add-form input, .add-form textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: border-color .15s;
+  }
+  .add-form textarea { resize: vertical; min-height: 60px; }
+  .add-form input:focus, .add-form textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .form-actions { grid-column: 1 / -1; display: flex; gap: 10px; justify-content: flex-end; }
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    transition: background .15s, opacity .15s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    padding: 11px 22px;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-dim);
+    padding: 11px 16px;
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface-hover); }
+
+  /* 툴바 */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .toolbar input[type="search"] {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 0.92rem;
+    font-family: inherit;
+  }
+  .toolbar input[type="search"]:focus { outline: none; border-color: var(--accent); }
+  .count { color: var(--text-dim); font-size: 0.88rem; white-space: nowrap; }
+
+  /* 카테고리 칩 */
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+  .chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+  }
+  .chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* 링크 카드 */
+  .works { display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: background .15s, transform .1s;
+  }
+  .card:hover { background: var(--surface-hover); }
+  .card .favicon {
+    width: 38px; height: 38px;
+    border-radius: 9px;
+    background: var(--bg);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .card .favicon img { width: 22px; height: 22px; }
+  .card .info { flex: 1; min-width: 0; }
+  .card .title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .card a.title {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 1.02rem;
+    text-decoration: none;
+  }
+  .card a.title:hover { color: var(--accent); text-decoration: underline; }
+  .card .tag {
+    font-size: 0.72rem;
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    color: var(--accent);
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .card .desc {
+    color: var(--text-dim);
+    font-size: 0.86rem;
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card .url {
+    color: var(--text-dim);
+    font-size: 0.76rem;
+    margin-top: 3px;
+    opacity: 0.7;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card .actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    font-size: 0.95rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .icon-btn:hover { background: var(--bg); color: var(--text); }
+  .icon-btn.delete:hover { color: var(--danger); border-color: var(--danger); }
+
+  /* 빈 상태 */
+  .empty {
+    text-align: center;
+    color: var(--text-dim);
+    padding: 60px 20px;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+  }
+  .empty .big { font-size: 2.4rem; margin-bottom: 12px; }
+
+  /* 푸터 */
+  .footer-tools {
+    margin-top: 36px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .footer-tools button, .footer-tools label {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    font-family: inherit;
+  }
+  .footer-tools button:hover, .footer-tools label:hover { background: var(--surface); }
+
+  @media (max-width: 600px) {
+    .add-form { grid-template-columns: 1fr; }
+    .card { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🗂️ 내 제작물 모음</h1>
+    <p>지금까지 만든 작업물을 링크로 정리하는 공간</p>
+  </header>
+
+  <form class="add-form" id="addForm">
+    <input type="text" id="inputTitle" placeholder="제목 (예: 포트폴리오 사이트)" required>
+    <input type="text" id="inputCategory" placeholder="카테고리 (예: 웹, 앱, 디자인 — 선택)">
+    <input type="url" id="inputUrl" class="full" placeholder="링크 URL (https://...)" required>
+    <textarea id="inputDesc" class="full" placeholder="간단한 설명 (선택)"></textarea>
+    <div class="form-actions">
+      <button type="button" class="btn-ghost" id="cancelEdit" style="display:none">취소</button>
+      <button type="submit" class="btn-primary" id="submitBtn">+ 추가하기</button>
+    </div>
+  </form>
+
+  <div class="toolbar">
+    <input type="search" id="searchInput" placeholder="🔍 제목, 설명, 카테고리 검색">
+    <span class="count" id="countLabel"></span>
+  </div>
+
+  <div class="chips" id="chips"></div>
+
+  <div class="works" id="works"></div>
+
+  <div class="footer-tools">
+    <button id="exportBtn">⬇ 백업 내보내기 (JSON)</button>
+    <label for="importFile">⬆ 백업 가져오기</label>
+    <input type="file" id="importFile" accept=".json" style="display:none">
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'my-works-v1';
+let works = [];
+let editingId = null;
+let activeCategory = '전체';
+let searchQuery = '';
+
+function load() {
+  try { works = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { works = []; }
+}
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(works));
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[c]);
+}
+
+function faviconUrl(url) {
+  try {
+    const host = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+  } catch { return ''; }
+}
+
+function categories() {
+  const set = new Set(works.map(w => w.category).filter(Boolean));
+  return ['전체', ...set];
+}
+
+function filtered() {
+  return works.filter(w => {
+    if (activeCategory !== '전체' && w.category !== activeCategory) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return (w.title + ' ' + (w.description||'') + ' ' + (w.category||'') + ' ' + w.url)
+        .toLowerCase().includes(q);
+    }
+    return true;
+  });
+}
+
+function render() {
+  // 카테고리 칩
+  const chipsEl = document.getElementById('chips');
+  const cats = categories();
+  if (!cats.includes(activeCategory)) activeCategory = '전체';
+  chipsEl.innerHTML = cats.map(c =>
+    `<button type="button" class="chip ${c === activeCategory ? 'active' : ''}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`
+  ).join('');
+
+  // 카드 목록
+  const list = filtered();
+  const worksEl = document.getElementById('works');
+  if (works.length === 0) {
+    worksEl.innerHTML = `<div class="empty"><div class="big">📭</div>아직 등록된 제작물이 없어요.<br>위 폼에서 첫 번째 링크를 추가해 보세요!</div>`;
+  } else if (list.length === 0) {
+    worksEl.innerHTML = `<div class="empty"><div class="big">🔍</div>검색 결과가 없어요.</div>`;
+  } else {
+    worksEl.innerHTML = list.map(w => `
+      <div class="card" data-id="${w.id}">
+        <div class="favicon"><img src="${faviconUrl(w.url)}" alt="" onerror="this.style.display='none'"></div>
+        <div class="info">
+          <div class="title-row">
+            <a class="title" href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(w.title)}</a>
+            ${w.category ? `<span class="tag">${escapeHtml(w.category)}</span>` : ''}
+          </div>
+          ${w.description ? `<div class="desc">${escapeHtml(w.description)}</div>` : ''}
+          <div class="url">${escapeHtml(w.url)}</div>
+        </div>
+        <div class="actions">
+          <button type="button" class="icon-btn edit" title="수정">✏️</button>
+          <button type="button" class="icon-btn delete" title="삭제">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('countLabel').textContent =
+    `${list.length}개 / 총 ${works.length}개`;
+}
+
+// 폼 제출 (추가 또는 수정)
+document.getElementById('addForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const title = document.getElementById('inputTitle').value.trim();
+  let url = document.getElementById('inputUrl').value.trim();
+  const category = document.getElementById('inputCategory').value.trim();
+  const description = document.getElementById('inputDesc').value.trim();
+  if (!title || !url) return;
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+  if (editingId) {
+    const w = works.find(w => w.id === editingId);
+    if (w) Object.assign(w, { title, url, category, description });
+    stopEditing();
+  } else {
+    works.unshift({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      title, url, category, description,
+      createdAt: new Date().toISOString()
+    });
+  }
+  save();
+  e.target.reset();
+  render();
+});
+
+function startEditing(w) {
+  editingId = w.id;
+  document.getElementById('inputTitle').value = w.title;
+  document.getElementById('inputUrl').value = w.url;
+  document.getElementById('inputCategory').value = w.category || '';
+  document.getElementById('inputDesc').value = w.description || '';
+  document.getElementById('submitBtn').textContent = '✓ 수정 완료';
+  document.getElementById('cancelEdit').style.display = '';
+  document.getElementById('inputTitle').focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function stopEditing() {
+  editingId = null;
+  document.getElementById('submitBtn').textContent = '+ 추가하기';
+  document.getElementById('cancelEdit').style.display = 'none';
+  document.getElementById('addForm').reset();
+}
+document.getElementById('cancelEdit').addEventListener('click', stopEditing);
+
+// 카드 내 수정/삭제 버튼
+document.getElementById('works').addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const w = works.find(w => w.id === card.dataset.id);
+  if (!w) return;
+  if (e.target.closest('.edit')) startEditing(w);
+  if (e.target.closest('.delete')) {
+    if (confirm(`"${w.title}" 항목을 삭제할까요?`)) {
+      works = works.filter(x => x.id !== w.id);
+      if (editingId === w.id) stopEditing();
+      save();
+      render();
+    }
+  }
+});
+
+// 카테고리 칩
+document.getElementById('chips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  activeCategory = chip.dataset.cat;
+  render();
+});
+
+// 검색
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  render();
+});
+
+// 백업 내보내기 / 가져오기
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(works, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `my-works-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+document.getElementById('importFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!Array.isArray(data)) throw new Error();
+      const existing = new Set(works.map(w => w.id));
+      const added = data.filter(w => w && w.id && w.title && w.url && !existing.has(w.id));
+      works = [...added, ...works];
+      save();
+      render();
+      alert(`${added.length}개 항목을 가져왔어요.`);
+    } catch {
+      alert('올바른 백업 파일이 아니에요.');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+load();
+render();
+</script>
+</body>
+</html>
