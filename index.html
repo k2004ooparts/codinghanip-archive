@@ -201,6 +201,34 @@
   }
   .icon-btn:hover { background: var(--bg); color: var(--text); }
   .icon-btn.delete:hover { color: var(--danger); border-color: var(--danger); }
+  .open-btn {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+    padding: 8px 14px;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+  }
+  .open-btn:hover { background: var(--accent); color: #fff; }
+
+  /* 드래그 정렬 */
+  .card .drag-handle {
+    cursor: grab;
+    color: var(--text-dim);
+    font-size: 1.05rem;
+    flex-shrink: 0;
+    padding: 6px 2px;
+    user-select: none;
+    -webkit-user-select: none;
+    opacity: 0.5;
+  }
+  .card .drag-handle:hover { opacity: 1; }
+  .card .drag-handle:active { cursor: grabbing; }
+  .card.dragging { opacity: 0.45; border-style: dashed; }
 
   /* 빈 상태 */
   .empty {
@@ -336,6 +364,7 @@ function render() {
   } else {
     worksEl.innerHTML = list.map(w => `
       <div class="card" data-id="${w.id}">
+        <div class="drag-handle" title="드래그해서 순서 변경">⠿</div>
         <div class="favicon"><img src="${faviconUrl(w.url)}" alt="" onerror="this.style.display='none'"></div>
         <div class="info">
           <div class="title-row">
@@ -346,6 +375,7 @@ function render() {
           <div class="url">${escapeHtml(w.url)}</div>
         </div>
         <div class="actions">
+          <a class="open-btn" href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">열기 ↗</a>
           <button type="button" class="icon-btn edit" title="수정">✏️</button>
           <button type="button" class="icon-btn delete" title="삭제">🗑️</button>
         </div>
@@ -417,6 +447,48 @@ document.getElementById('works').addEventListener('click', e => {
       render();
     }
   }
+});
+
+// 드래그로 순서 변경 (핸들 ⠿ 에서만 시작)
+const worksList = document.getElementById('works');
+worksList.addEventListener('mousedown', e => {
+  const handle = e.target.closest('.drag-handle');
+  if (handle) handle.closest('.card').setAttribute('draggable', 'true');
+});
+document.addEventListener('mouseup', () => {
+  worksList.querySelectorAll('.card[draggable]').forEach(c => c.removeAttribute('draggable'));
+});
+worksList.addEventListener('dragstart', e => {
+  const card = e.target.closest('.card');
+  if (!card || card.getAttribute('draggable') !== 'true') return;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', card.dataset.id);
+  requestAnimationFrame(() => card.classList.add('dragging'));
+});
+worksList.addEventListener('dragover', e => {
+  const dragging = worksList.querySelector('.card.dragging');
+  if (!dragging) return;
+  e.preventDefault();
+  const target = e.target.closest('.card');
+  if (!target || target === dragging) return;
+  const rect = target.getBoundingClientRect();
+  const after = e.clientY > rect.top + rect.height / 2;
+  worksList.insertBefore(dragging, after ? target.nextElementSibling : target);
+});
+worksList.addEventListener('dragend', e => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  card.classList.remove('dragging');
+  card.removeAttribute('draggable');
+  // 화면의 카드 순서를 저장 데이터에 반영
+  // (검색/필터 중이면 보이는 항목들의 자리만 서로 재배치)
+  const domIds = [...worksList.querySelectorAll('.card')].map(c => c.dataset.id);
+  const visible = new Set(domIds);
+  const byId = Object.fromEntries(works.map(w => [w.id, w]));
+  let i = 0;
+  works = works.map(w => visible.has(w.id) ? byId[domIds[i++]] : w);
+  save();
+  render();
 });
 
 // 카테고리 칩
