@@ -115,6 +115,17 @@
     font-family: inherit;
   }
   .toolbar input[type="search"]:focus { outline: none; border-color: var(--accent); }
+  .toolbar select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 0.92rem;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .toolbar select:focus { outline: none; border-color: var(--accent); }
   .count { color: var(--text-dim); font-size: 0.88rem; white-space: nowrap; }
 
   /* 카테고리 칩 */
@@ -286,6 +297,12 @@
 
   <div class="toolbar">
     <input type="search" id="searchInput" placeholder="🔍 제목, 설명, 카테고리 검색">
+    <select id="sortSelect" title="정렬 방식">
+      <option value="manual">직접 정렬 (드래그)</option>
+      <option value="latest">최신순</option>
+      <option value="oldest">오래된순</option>
+      <option value="name">이름순</option>
+    </select>
     <span class="count" id="countLabel"></span>
   </div>
 
@@ -302,10 +319,12 @@
 
 <script>
 const STORAGE_KEY = 'my-works-v1';
+const SORT_KEY = 'my-works-sort';
 let works = [];
 let editingId = null;
 let activeCategory = '전체';
 let searchQuery = '';
+let sortMode = localStorage.getItem(SORT_KEY) || 'manual';
 
 function load() {
   try { works = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
@@ -333,6 +352,13 @@ function categories() {
   return ['전체', ...set];
 }
 
+function sorted(list) {
+  if (sortMode === 'latest') return [...list].sort((a, b) => (b.createdAt||'').localeCompare(a.createdAt||''));
+  if (sortMode === 'oldest') return [...list].sort((a, b) => (a.createdAt||'').localeCompare(b.createdAt||''));
+  if (sortMode === 'name') return [...list].sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+  return list; // manual: 저장된 순서 그대로
+}
+
 function filtered() {
   return works.filter(w => {
     if (activeCategory !== '전체' && w.category !== activeCategory) return false;
@@ -355,7 +381,7 @@ function render() {
   ).join('');
 
   // 카드 목록
-  const list = filtered();
+  const list = sorted(filtered());
   const worksEl = document.getElementById('works');
   if (works.length === 0) {
     worksEl.innerHTML = `<div class="empty"><div class="big">📭</div>아직 등록된 제작물이 없어요.<br>위 폼에서 첫 번째 링크를 추가해 보세요!</div>`;
@@ -364,7 +390,7 @@ function render() {
   } else {
     worksEl.innerHTML = list.map(w => `
       <div class="card" data-id="${w.id}">
-        <div class="drag-handle" title="드래그해서 순서 변경">⠿</div>
+        ${sortMode === 'manual' ? '<div class="drag-handle" title="드래그해서 순서 변경">⠿</div>' : ''}
         <div class="favicon"><img src="${faviconUrl(w.url)}" alt="" onerror="this.style.display='none'"></div>
         <div class="info">
           <div class="title-row">
@@ -477,7 +503,8 @@ worksList.addEventListener('dragover', e => {
 });
 worksList.addEventListener('dragend', e => {
   const card = e.target.closest('.card');
-  if (!card) return;
+  // 핸들로 시작한 드래그(.dragging)만 처리 — 링크 텍스트 등 기본 드래그는 무시
+  if (!card || !card.classList.contains('dragging')) return;
   card.classList.remove('dragging');
   card.removeAttribute('draggable');
   // 화면의 카드 순서를 저장 데이터에 반영
@@ -502,6 +529,15 @@ document.getElementById('chips').addEventListener('click', e => {
 // 검색
 document.getElementById('searchInput').addEventListener('input', e => {
   searchQuery = e.target.value.trim();
+  render();
+});
+
+// 정렬
+const sortSelect = document.getElementById('sortSelect');
+sortSelect.value = sortMode;
+sortSelect.addEventListener('change', e => {
+  sortMode = e.target.value;
+  localStorage.setItem(SORT_KEY, sortMode);
   render();
 });
 
