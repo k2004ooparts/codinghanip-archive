@@ -271,9 +271,95 @@
   }
   .footer-tools button:hover, .footer-tools label:hover { background: var(--surface); }
 
+  /* 판매 상품 (전자책·강의) 섹션 */
+  .store { margin-top: 52px; padding-top: 36px; border-top: 1px solid var(--border); }
+  .store-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .store-head h2 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.4px; }
+  .store-sub { color: var(--text-dim); font-size: 0.9rem; margin: 8px 0 22px; line-height: 1.5; }
+  .product-form { margin-bottom: 24px; }
+  .product-form select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .product-form select:focus { outline: none; border-color: var(--accent); }
+  .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .product-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform .12s, border-color .15s;
+  }
+  .product-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  }
+  .product-thumb {
+    width: 100%;
+    height: 116px;
+    border-radius: 10px;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    overflow: hidden;
+  }
+  .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .product-type {
+    align-self: flex-start;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .product-type.ebook { background: color-mix(in srgb, #f59e0b 18%, transparent); color: #d97706; }
+  .product-type.course { background: color-mix(in srgb, #8b5cf6 22%, transparent); color: #7c3aed; }
+  @media (prefers-color-scheme: dark) {
+    .product-type.ebook { color: #fbbf24; }
+    .product-type.course { color: #a78bfa; }
+  }
+  .product-name { font-weight: 700; font-size: 1.02rem; line-height: 1.35; }
+  .product-desc {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    line-height: 1.45;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .product-price { font-size: 1.15rem; font-weight: 800; }
+  .product-price .free { color: var(--accent); }
+  .buy-btn {
+    background: var(--accent);
+    color: #fff;
+    text-align: center;
+    padding: 11px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.92rem;
+    display: block;
+  }
+  .buy-btn:hover { background: var(--accent-hover); }
+  .product-edit-row { display: flex; gap: 6px; }
+  .product-edit-row .icon-btn { flex: 1; }
+
   @media (max-width: 600px) {
     .add-form { grid-template-columns: 1fr; }
     .card { flex-wrap: wrap; }
+    .store-grid { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
@@ -309,6 +395,32 @@
   <div class="chips" id="chips"></div>
 
   <div class="works" id="works"></div>
+
+  <section class="store" id="store">
+    <div class="store-head">
+      <h2>🛒 전자책 · 강의</h2>
+      <button type="button" class="btn-ghost" id="toggleProductForm">+ 새 상품 등록</button>
+    </div>
+    <p class="store-sub">제작물을 전자책·강의로 만들어 판매해요. 구매 버튼은 인프런·크몽·Gumroad 등 판매 페이지로 연결됩니다.</p>
+
+    <form class="add-form product-form" id="productForm" style="display:none">
+      <input type="text" id="pName" placeholder="상품명 (예: 7일 만에 끝내는 React)" required>
+      <select id="pType">
+        <option value="전자책">전자책</option>
+        <option value="강의">강의</option>
+      </select>
+      <input type="text" id="pThumb" placeholder="썸네일 이모지 또는 이미지 URL (예: 📘)">
+      <input type="number" id="pPrice" placeholder="가격 (원, 0=무료)" min="0">
+      <input type="url" id="pBuyUrl" class="full" placeholder="구매/판매 페이지 URL (인프런·크몽·Gumroad 등)" required>
+      <textarea id="pDesc" class="full" placeholder="상품 소개 (선택)"></textarea>
+      <div class="form-actions">
+        <button type="button" class="btn-ghost" id="pCancel">취소</button>
+        <button type="submit" class="btn-primary" id="pSubmit">+ 상품 추가</button>
+      </div>
+    </form>
+
+    <div class="store-grid" id="storeGrid"></div>
+  </section>
 
   <div class="footer-tools">
     <button id="exportBtn">⬇ 백업 내보내기 (JSON)</button>
@@ -541,12 +653,128 @@ sortSelect.addEventListener('change', e => {
   render();
 });
 
-// 백업 내보내기 / 가져오기
+// ===== 판매 상품 (전자책·강의) =====
+const PRODUCTS_KEY = 'my-products-v1';
+let products = [];
+let editingProductId = null;
+
+function loadProducts() {
+  try { products = JSON.parse(localStorage.getItem(PRODUCTS_KEY)) || []; }
+  catch { products = []; }
+}
+function saveProducts() {
+  localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+}
+function formatPrice(p) {
+  const n = Number(p) || 0;
+  return n <= 0 ? '<span class="free">무료</span>' : n.toLocaleString('ko-KR') + '원';
+}
+function renderStore() {
+  const grid = document.getElementById('storeGrid');
+  if (products.length === 0) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">🛒</div>아직 등록된 상품이 없어요.<br>'+ 새 상품 등록'으로 전자책·강의를 추가해 보세요.</div>`;
+    return;
+  }
+  grid.innerHTML = products.map(p => {
+    const isCourse = p.type === '강의';
+    const thumb = p.thumb && /^https?:\/\//i.test(p.thumb)
+      ? `<img src="${escapeHtml(p.thumb)}" alt="" onerror="this.replaceWith(document.createTextNode('${isCourse ? '🎬' : '📘'}'))">`
+      : escapeHtml(p.thumb || (isCourse ? '🎬' : '📘'));
+    return `
+    <div class="product-card" data-id="${p.id}">
+      <div class="product-thumb">${thumb}</div>
+      <span class="product-type ${isCourse ? 'course' : 'ebook'}">${escapeHtml(p.type)}</span>
+      <div class="product-name">${escapeHtml(p.name)}</div>
+      <div class="product-desc">${escapeHtml(p.desc || '')}</div>
+      <div class="product-price">${formatPrice(p.price)}</div>
+      <a class="buy-btn" href="${escapeHtml(p.buyUrl)}" target="_blank" rel="noopener noreferrer">구매하기 →</a>
+      <div class="product-edit-row">
+        <button type="button" class="icon-btn p-edit" title="수정">✏️</button>
+        <button type="button" class="icon-btn delete p-delete" title="삭제">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+const productForm = document.getElementById('productForm');
+document.getElementById('toggleProductForm').addEventListener('click', () => {
+  const open = productForm.style.display !== 'none';
+  productForm.style.display = open ? 'none' : 'grid';
+  if (!open) document.getElementById('pName').focus();
+});
+document.getElementById('pCancel').addEventListener('click', () => {
+  stopEditingProduct();
+  productForm.style.display = 'none';
+});
+
+productForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const name = document.getElementById('pName').value.trim();
+  const type = document.getElementById('pType').value;
+  const thumb = document.getElementById('pThumb').value.trim();
+  const price = document.getElementById('pPrice').value.trim();
+  let buyUrl = document.getElementById('pBuyUrl').value.trim();
+  const desc = document.getElementById('pDesc').value.trim();
+  if (!name || !buyUrl) return;
+  if (!/^https?:\/\//i.test(buyUrl)) buyUrl = 'https://' + buyUrl;
+
+  if (editingProductId) {
+    const p = products.find(p => p.id === editingProductId);
+    if (p) Object.assign(p, { name, type, thumb, price, buyUrl, desc });
+    stopEditingProduct();
+  } else {
+    products.unshift({
+      id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+      name, type, thumb, price, buyUrl, desc
+    });
+  }
+  saveProducts();
+  productForm.reset();
+  renderStore();
+});
+
+function startEditingProduct(p) {
+  editingProductId = p.id;
+  document.getElementById('pName').value = p.name;
+  document.getElementById('pType').value = p.type;
+  document.getElementById('pThumb').value = p.thumb || '';
+  document.getElementById('pPrice').value = p.price || '';
+  document.getElementById('pBuyUrl').value = p.buyUrl;
+  document.getElementById('pDesc').value = p.desc || '';
+  document.getElementById('pSubmit').textContent = '✓ 수정 완료';
+  productForm.style.display = 'grid';
+  document.getElementById('pName').focus();
+  productForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function stopEditingProduct() {
+  editingProductId = null;
+  document.getElementById('pSubmit').textContent = '+ 상품 추가';
+  productForm.reset();
+}
+
+document.getElementById('storeGrid').addEventListener('click', e => {
+  const card = e.target.closest('.product-card');
+  if (!card) return;
+  const p = products.find(p => p.id === card.dataset.id);
+  if (!p) return;
+  if (e.target.closest('.p-edit')) startEditingProduct(p);
+  if (e.target.closest('.p-delete')) {
+    if (confirm(`"${p.name}" 상품을 삭제할까요?`)) {
+      products = products.filter(x => x.id !== p.id);
+      if (editingProductId === p.id) stopEditingProduct();
+      saveProducts();
+      renderStore();
+    }
+  }
+});
+
+// 백업 내보내기 / 가져오기 (제작물 + 상품 함께)
 document.getElementById('exportBtn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(works, null, 2)], { type: 'application/json' });
+  const payload = { works, products, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `my-works-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `codinghanip-backup-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
 });
@@ -557,13 +785,23 @@ document.getElementById('importFile').addEventListener('change', e => {
   reader.onload = () => {
     try {
       const data = JSON.parse(reader.result);
-      if (!Array.isArray(data)) throw new Error();
-      const existing = new Set(works.map(w => w.id));
-      const added = data.filter(w => w && w.id && w.title && w.url && !existing.has(w.id));
-      works = [...added, ...works];
+      // 구버전(배열=제작물만)과 신버전({works, products}) 모두 지원
+      const inWorks = Array.isArray(data) ? data : (data.works || []);
+      const inProducts = Array.isArray(data) ? [] : (data.products || []);
+
+      const haveW = new Set(works.map(w => w.id));
+      const addedW = inWorks.filter(w => w && w.id && w.title && w.url && !haveW.has(w.id));
+      works = [...addedW, ...works];
+
+      const haveP = new Set(products.map(p => p.id));
+      const addedP = inProducts.filter(p => p && p.id && p.name && p.buyUrl && !haveP.has(p.id));
+      products = [...addedP, ...products];
+
       save();
+      saveProducts();
       render();
-      alert(`${added.length}개 항목을 가져왔어요.`);
+      renderStore();
+      alert(`제작물 ${addedW.length}개, 상품 ${addedP.length}개를 가져왔어요.`);
     } catch {
       alert('올바른 백업 파일이 아니에요.');
     }
@@ -574,6 +812,8 @@ document.getElementById('importFile').addEventListener('change', e => {
 
 load();
 render();
+loadProducts();
+renderStore();
 </script>
 </body>
 </html>
