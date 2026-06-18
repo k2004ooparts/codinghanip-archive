@@ -4,6 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>코딩한입 아카이브</title>
+<!-- ===== Google Analytics 4 (유입경로·방문자 추적) ===== -->
+<script>
+  // ▼▼▼ 여기에 GA4 측정 ID를 붙여넣으세요 (예: 'G-ABCD1234') ▼▼▼
+  //   발급: analytics.google.com → 관리(Admin) → 데이터 스트림 → 웹 → 측정 ID
+  window.GA_MEASUREMENT_ID = 'G-XXXXXXXXXX';
+  // ▲▲▲ 위 한 줄만 바꾸면 추적이 켜집니다 ▲▲▲
+  (function () {
+    var id = window.GA_MEASUREMENT_ID;
+    if (!id || /X{4,}/.test(id)) return; // placeholder면 비활성
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { dataLayer.push(arguments); };
+    gtag('js', new Date());
+    gtag('config', id); // 유입경로(referrer)·UTM·지역·기기 자동 수집
+  })();
+</script>
 <style>
   :root {
     --bg: #0f1117;
@@ -808,6 +827,33 @@ document.getElementById('importFile').addEventListener('change', e => {
     e.target.value = '';
   };
   reader.readAsText(file);
+});
+
+// ===== 클릭 전환 추적 (GA4) =====
+// 측정 ID가 설정돼 있을 때만 전송되고, 아니면 조용히 무시됩니다.
+function track(name, params) {
+  if (typeof window.gtag === 'function') window.gtag('event', name, params || {});
+}
+// 이벤트 위임 — 카드가 다시 그려져도 계속 동작
+document.addEventListener('click', e => {
+  const buy = e.target.closest('.buy-btn');
+  if (buy) {
+    const card = buy.closest('.product-card');
+    const p = products.find(x => x.id === (card && card.dataset.id));
+    track('purchase_click', {
+      product_name: p ? p.name : '',
+      product_type: p ? p.type : '',
+      price: p ? Number(p.price) || 0 : 0,
+      link_url: buy.href
+    });
+    return;
+  }
+  const open = e.target.closest('#works .open-btn, #works a.title');
+  if (open) {
+    const card = open.closest('.card');
+    const w = works.find(x => x.id === (card && card.dataset.id));
+    track('open_work', { work_title: w ? w.title : open.textContent.trim(), link_url: open.href });
+  }
 });
 
 load();
