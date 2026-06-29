@@ -483,6 +483,13 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   .modal-body textarea:focus { outline: none; border-color: var(--accent); }
+  .modal-body textarea[readonly] {
+    background: color-mix(in srgb, var(--bg) 65%, var(--surface));
+    cursor: default;
+    resize: none;
+  }
+  .modal-body textarea[readonly]:focus { border-color: var(--border); }
+  .modal-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
   .modal-actions {
     display: flex;
     gap: 10px;
@@ -1007,7 +1014,14 @@ function openPromptModal(w) {
     admin ? '프롬프트를 작성하고 저장하세요.' : '이 작업물에 사용한 프롬프트예요.';
   promptText.value = w.prompt || '';
   promptText.readOnly = !admin;
+  promptText.placeholder = admin
+    ? '이 작업물을 만들 때 사용한 프롬프트를 적어보세요.'
+    : '등록된 프롬프트가 없어요.';
   document.getElementById('promptSave').style.display = admin ? '' : 'none';
+  // 방문자에겐 복사가 유일한 동작이므로 메인 버튼으로 강조, 빈 프롬프트면 비활성
+  const copyBtn = document.getElementById('promptCopy');
+  copyBtn.className = admin ? 'btn-ghost' : 'btn-primary';
+  copyBtn.disabled = !w.prompt;
   document.getElementById('promptHint').textContent =
     (!admin && !w.prompt) ? '아직 등록된 프롬프트가 없어요.' : '';
   promptModal.classList.add('open');
