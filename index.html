@@ -404,6 +404,95 @@
   }
   body.is-admin .admin-banner { display: block; }
 
+  /* 프롬프트 버튼 */
+  .prompt-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px 12px;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .prompt-btn:hover { background: var(--bg); color: var(--text); border-color: var(--accent); }
+  .prompt-btn.has-prompt { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+
+  /* 프롬프트 모달 */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  }
+  .modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-head h3 { font-size: 1.05rem; font-weight: 700; line-height: 1.3; word-break: break-all; }
+  .modal-head .sub { font-size: 0.8rem; color: var(--text-dim); margin-top: 3px; }
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 8px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .modal-close:hover { background: var(--bg); color: var(--text); }
+  .modal-body { padding: 18px 20px; overflow-y: auto; }
+  .modal-body textarea {
+    width: 100%;
+    min-height: 220px;
+    resize: vertical;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    color: var(--text);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .modal-body textarea:focus { outline: none; border-color: var(--accent); }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .modal-hint { margin-right: auto; font-size: 0.8rem; color: var(--text-dim); }
+
   @media (max-width: 600px) {
     .add-form { grid-template-columns: 1fr; }
     .card { flex-wrap: wrap; }
@@ -480,6 +569,26 @@
 
   <div class="admin-bar">
     <button type="button" id="adminToggle">🔒 관리자</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="promptModal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div>
+        <h3 id="promptModalTitle">프롬프트</h3>
+        <div class="sub" id="promptModalSub"></div>
+      </div>
+      <button type="button" class="modal-close" id="promptModalClose" aria-label="닫기">×</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="promptText" placeholder="이 작업물을 만들 때 사용한 프롬프트를 적어보세요."></textarea>
+    </div>
+    <div class="modal-actions">
+      <span class="modal-hint" id="promptHint"></span>
+      <button type="button" class="btn-ghost" id="promptCopy">📋 복사</button>
+      <button type="button" class="btn-primary" id="promptSave">💾 저장</button>
+    </div>
   </div>
 </div>
 
@@ -587,6 +696,7 @@ function render() {
         </div>
         <div class="actions">
           <a class="open-btn" href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">열기 ↗</a>
+          <button type="button" class="prompt-btn ${w.prompt ? 'has-prompt' : ''}" title="프롬프트 보기">📝 프롬프트</button>
           ${isAdmin() ? `<button type="button" class="icon-btn edit" title="수정">✏️</button>
           <button type="button" class="icon-btn delete" title="삭제">🗑️</button>` : ''}
         </div>
@@ -649,6 +759,7 @@ document.getElementById('works').addEventListener('click', e => {
   if (!card) return;
   const w = works.find(w => w.id === card.dataset.id);
   if (!w) return;
+  if (e.target.closest('.prompt-btn')) { openPromptModal(w); return; }
   if (e.target.closest('.edit')) startEditing(w);
   if (e.target.closest('.delete')) {
     if (confirm(`"${w.title}" 항목을 삭제할까요?`)) {
@@ -881,6 +992,53 @@ document.getElementById('importFile').addEventListener('change', e => {
     e.target.value = '';
   };
   reader.readAsText(file);
+});
+
+// ===== 프롬프트 메모 모달 =====
+let promptWorkId = null;
+const promptModal = document.getElementById('promptModal');
+const promptText = document.getElementById('promptText');
+
+function openPromptModal(w) {
+  promptWorkId = w.id;
+  const admin = isAdmin();
+  document.getElementById('promptModalTitle').textContent = '📝 ' + w.title;
+  document.getElementById('promptModalSub').textContent =
+    admin ? '프롬프트를 작성하고 저장하세요.' : '이 작업물에 사용한 프롬프트예요.';
+  promptText.value = w.prompt || '';
+  promptText.readOnly = !admin;
+  document.getElementById('promptSave').style.display = admin ? '' : 'none';
+  document.getElementById('promptHint').textContent =
+    (!admin && !w.prompt) ? '아직 등록된 프롬프트가 없어요.' : '';
+  promptModal.classList.add('open');
+  if (admin) promptText.focus();
+  track('view_prompt', { work_title: w.title });
+}
+function closePromptModal() {
+  promptModal.classList.remove('open');
+  promptWorkId = null;
+}
+document.getElementById('promptModalClose').addEventListener('click', closePromptModal);
+promptModal.addEventListener('click', e => { if (e.target === promptModal) closePromptModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && promptModal.classList.contains('open')) closePromptModal();
+});
+document.getElementById('promptSave').addEventListener('click', () => {
+  if (!promptWorkId) return;
+  const w = works.find(x => x.id === promptWorkId);
+  if (w) { w.prompt = promptText.value; save(); render(); }
+  closePromptModal();
+});
+document.getElementById('promptCopy').addEventListener('click', async () => {
+  const hint = document.getElementById('promptHint');
+  try {
+    await navigator.clipboard.writeText(promptText.value);
+  } catch {
+    promptText.select();
+    try { document.execCommand('copy'); } catch {}
+  }
+  hint.textContent = '복사됐어요!';
+  setTimeout(() => { hint.textContent = ''; }, 1500);
 });
 
 // ===== 클릭 전환 추적 (GA4) =====
