@@ -375,6 +375,35 @@
   .product-edit-row { display: flex; gap: 6px; }
   .product-edit-row .icon-btn { flex: 1; }
 
+  /* 관리자 모드 */
+  .admin-bar { margin-top: 30px; display: flex; justify-content: center; }
+  .admin-bar button {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 7px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+  }
+  .admin-bar button:hover { background: var(--surface); }
+  body.is-admin .admin-bar button { color: var(--accent); border-color: var(--accent); }
+  .admin-banner {
+    display: none;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  body.is-admin .admin-banner { display: block; }
+
   @media (max-width: 600px) {
     .add-form { grid-template-columns: 1fr; }
     .card { flex-wrap: wrap; }
@@ -389,7 +418,9 @@
     <p>지금까지 만든 작업물을 링크로 정리하는 공간</p>
   </header>
 
-  <form class="add-form" id="addForm">
+  <div class="admin-banner">🔧 관리자 모드 — 추가·수정·삭제가 가능합니다. (변경은 이 브라우저에만 저장돼요)</div>
+
+  <form class="add-form" id="addForm" style="display:none">
     <input type="text" id="inputTitle" placeholder="제목 (예: 포트폴리오 사이트)" required>
     <input type="text" id="inputCategory" placeholder="카테고리 (예: 웹, 앱, 디자인 — 선택)">
     <input type="url" id="inputUrl" class="full" placeholder="링크 URL (https://...)" required>
@@ -418,7 +449,7 @@
   <section class="store" id="store">
     <div class="store-head">
       <h2>🛒 전자책 · 강의</h2>
-      <button type="button" class="btn-ghost" id="toggleProductForm">+ 새 상품 등록</button>
+      <button type="button" class="btn-ghost" id="toggleProductForm" style="display:none">+ 새 상품 등록</button>
     </div>
     <p class="store-sub">제작물을 전자책·강의로 만들어 판매해요. 구매 버튼은 인프런·크몽·Gumroad 등 판매 페이지로 연결됩니다.</p>
 
@@ -441,16 +472,36 @@
     <div class="store-grid" id="storeGrid"></div>
   </section>
 
-  <div class="footer-tools">
+  <div class="footer-tools" style="display:none">
     <button id="exportBtn">⬇ 백업 내보내기 (JSON)</button>
     <label for="importFile">⬆ 백업 가져오기</label>
     <input type="file" id="importFile" accept=".json" style="display:none">
+  </div>
+
+  <div class="admin-bar">
+    <button type="button" id="adminToggle">🔒 관리자</button>
   </div>
 </div>
 
 <script>
 const STORAGE_KEY = 'my-works-v1';
 const SORT_KEY = 'my-works-sort';
+
+// ===== 관리자 모드 =====
+// ▼ 관리자 비밀번호 (소스에 노출되므로 '편집 UI 숨김'용일 뿐, 진짜 보안 아님)
+const ADMIN_PASSCODE = 'codinghanip';
+const ADMIN_FLAG = 'admin-mode';
+function isAdmin() { return localStorage.getItem(ADMIN_FLAG) === '1'; }
+
+// ===== 게시된 기본 제작물 (모든 방문자에게 보이는 목록) =====
+// 여기 있는 데이터가 '공개 포트폴리오'입니다. 변경을 모두에게 반영하려면 이 배열을 수정해 커밋하세요.
+const DEFAULT_WORKS = [
+  { id: 'd-baemin-claude', title: '배민 클론 (Claude)', url: 'https://k2004ooparts.github.io/baemin-claude/', category: '웹 클론', description: '배달의민족 UI 클론 — Claude로 제작', createdAt: '2026-06-20' },
+  { id: 'd-karrot', title: '당근마켓 클론', url: 'https://k2004ooparts.github.io/karrot-clone/', category: '웹 클론', description: '당근마켓 UI 클론', createdAt: '2026-06-18' },
+  { id: 'd-musinsa', title: '무신사 클론', url: 'https://k2004ooparts.github.io/musinsa-clone/', category: '웹 클론', description: '무신사 UI 클론', createdAt: '2026-06-16' },
+  { id: 'd-baemin-gpt', title: '배민 클론 (GPT)', url: 'https://k2004ooparts.github.io/baemin-clone-gpt/', category: '웹 클론', description: '배달의민족 UI 클론 — GPT로 제작', createdAt: '2026-06-14' }
+];
+
 let works = [];
 let editingId = null;
 let activeCategory = '전체';
@@ -458,8 +509,11 @@ let searchQuery = '';
 let sortMode = localStorage.getItem(SORT_KEY) || 'manual';
 
 function load() {
-  try { works = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch { works = []; }
+  let parsed = null;
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) { try { parsed = JSON.parse(raw); } catch {} }
+  // 저장된 목록이 있으면 그걸, 없으면(또는 비었으면) 게시 기본값을 사용
+  works = (Array.isArray(parsed) && parsed.length) ? parsed : DEFAULT_WORKS.map(w => ({ ...w }));
 }
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(works));
@@ -515,13 +569,13 @@ function render() {
   const list = sorted(filtered());
   const worksEl = document.getElementById('works');
   if (works.length === 0) {
-    worksEl.innerHTML = `<div class="empty"><div class="big">📭</div>아직 등록된 제작물이 없어요.<br>위 폼에서 첫 번째 링크를 추가해 보세요!</div>`;
+    worksEl.innerHTML = `<div class="empty"><div class="big">📭</div>아직 등록된 제작물이 없어요.${isAdmin() ? '<br>위 폼에서 첫 번째 링크를 추가해 보세요!' : ''}</div>`;
   } else if (list.length === 0) {
     worksEl.innerHTML = `<div class="empty"><div class="big">🔍</div>검색 결과가 없어요.</div>`;
   } else {
     worksEl.innerHTML = list.map(w => `
       <div class="card" data-id="${w.id}">
-        ${sortMode === 'manual' ? '<div class="drag-handle" title="드래그해서 순서 변경">⠿</div>' : ''}
+        ${isAdmin() && sortMode === 'manual' ? '<div class="drag-handle" title="드래그해서 순서 변경">⠿</div>' : ''}
         <div class="favicon"><img src="${faviconUrl(w.url)}" alt="" onerror="this.style.display='none'"></div>
         <div class="info">
           <div class="title-row">
@@ -533,8 +587,8 @@ function render() {
         </div>
         <div class="actions">
           <a class="open-btn" href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">열기 ↗</a>
-          <button type="button" class="icon-btn edit" title="수정">✏️</button>
-          <button type="button" class="icon-btn delete" title="삭제">🗑️</button>
+          ${isAdmin() ? `<button type="button" class="icon-btn edit" title="수정">✏️</button>
+          <button type="button" class="icon-btn delete" title="삭제">🗑️</button>` : ''}
         </div>
       </div>
     `).join('');
@@ -707,10 +761,10 @@ function renderStore() {
       <div class="product-desc">${escapeHtml(p.desc || '')}</div>
       <div class="product-price">${formatPrice(p.price)}</div>
       <a class="buy-btn" href="${escapeHtml(p.buyUrl)}" target="_blank" rel="noopener noreferrer">구매하기 →</a>
-      <div class="product-edit-row">
+      ${isAdmin() ? `<div class="product-edit-row">
         <button type="button" class="icon-btn p-edit" title="수정">✏️</button>
         <button type="button" class="icon-btn delete p-delete" title="삭제">🗑️</button>
-      </div>
+      </div>` : ''}
     </div>`;
   }).join('');
 }
@@ -856,10 +910,42 @@ document.addEventListener('click', e => {
   }
 });
 
+// ===== 관리자 모드 UI 토글 =====
+function applyAdminUI() {
+  const on = isAdmin();
+  document.body.classList.toggle('is-admin', on);
+  document.getElementById('addForm').style.display = on ? 'grid' : 'none';
+  document.getElementById('toggleProductForm').style.display = on ? '' : 'none';
+  if (!on) document.getElementById('productForm').style.display = 'none';
+  document.querySelector('.footer-tools').style.display = on ? 'flex' : 'none';
+  document.getElementById('adminToggle').textContent = on ? '🔓 관리자 모드 ON — 끄기' : '🔒 관리자';
+}
+document.getElementById('adminToggle').addEventListener('click', () => {
+  if (isAdmin()) {
+    localStorage.removeItem(ADMIN_FLAG);
+    stopEditing();
+    stopEditingProduct();
+  } else {
+    const pass = prompt('관리자 비밀번호를 입력하세요');
+    if (pass === null) return;
+    if (pass !== ADMIN_PASSCODE) { alert('비밀번호가 올바르지 않아요.'); return; }
+    localStorage.setItem(ADMIN_FLAG, '1');
+  }
+  applyAdminUI();
+  render();
+  renderStore();
+});
+// URL로 바로 진입: ...?admin=<비밀번호>
+(function () {
+  const u = new URLSearchParams(location.search).get('admin');
+  if (u && u === ADMIN_PASSCODE) localStorage.setItem(ADMIN_FLAG, '1');
+})();
+
 load();
 render();
 loadProducts();
 renderStore();
+applyAdminUI();
 </script>
 </body>
 </html>
