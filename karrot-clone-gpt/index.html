@@ -1,0 +1,2232 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>동네장터</title>
+    <style>
+      :root {
+        --ink: #172026;
+        --muted: rgba(23, 32, 38, 0.58);
+        --line: rgba(0, 0, 0, 0.1);
+        --bg: #f7faf8;
+        --paper: #fff;
+        --ocean: #0f766e;
+        --coral: #ef626c;
+        --mint: #d9f99d;
+        --gold: #f59e0b;
+        --shadow: 0 18px 45px rgba(23, 32, 38, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(180deg, rgba(15, 118, 110, 0.1), transparent 360px), var(--bg);
+        color: var(--ink);
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      button,
+      a,
+      select {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      img {
+        display: block;
+      }
+
+      .top {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(16px);
+      }
+
+      .wrap {
+        width: 100%;
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 0 18px;
+      }
+
+      .top-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 0;
+      }
+
+      .brand-button {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        text-align: left;
+      }
+
+      .brand {
+        font-size: 22px;
+        font-weight: 950;
+        letter-spacing: 0;
+      }
+
+      .place {
+        margin-top: 2px;
+        color: var(--ocean);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .icon-button,
+      .avatar-button {
+        display: inline-grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+        color: var(--ink);
+        font-weight: 950;
+      }
+
+      .avatar-button {
+        border-radius: 999px;
+        background: var(--coral);
+        color: white;
+        border-color: transparent;
+      }
+
+      .screen {
+        width: 100%;
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 18px 18px 92px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .surface {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .plain-surface {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: 1fr 48px;
+        gap: 10px;
+      }
+
+      .input,
+      .select,
+      .textarea {
+        width: 100%;
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+        color: var(--ink);
+        font-size: 16px;
+      }
+
+      .input,
+      .select {
+        height: 48px;
+        padding: 0 14px;
+      }
+
+      .textarea {
+        min-height: 132px;
+        padding: 12px 14px;
+        resize: vertical;
+      }
+
+      .filters {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding: 12px;
+      }
+
+      label,
+      .label {
+        display: grid;
+        gap: 6px;
+        min-width: 0;
+        color: rgba(23, 32, 38, 0.64);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .chips {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+
+      .chip {
+        flex: 0 0 auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+        padding: 9px 12px;
+        color: rgba(23, 32, 38, 0.72);
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .chip.active {
+        border-color: var(--ocean);
+        background: var(--ocean);
+        color: white;
+      }
+
+      .primary,
+      .secondary,
+      .danger,
+      .ghost,
+      .dark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        border-radius: 8px;
+        padding: 0 14px;
+        font-size: 14px;
+        font-weight: 950;
+      }
+
+      .primary {
+        border: 1px solid var(--ocean);
+        background: var(--ocean);
+        color: white;
+      }
+
+      .secondary {
+        border: 1px solid var(--line);
+        background: var(--paper);
+        color: var(--ink);
+      }
+
+      .danger {
+        border: 1px solid rgba(239, 98, 108, 0.2);
+        background: rgba(239, 98, 108, 0.08);
+        color: var(--coral);
+      }
+
+      .ghost {
+        border: 0;
+        background: transparent;
+        color: var(--ocean);
+      }
+
+      .dark {
+        border: 1px solid var(--ink);
+        background: var(--ink);
+        color: white;
+      }
+
+      .plus {
+        width: 48px;
+        height: 48px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--coral);
+        color: white;
+        font-size: 30px;
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .list-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 24px;
+        font-weight: 950;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        font-size: 18px;
+        font-weight: 950;
+        letter-spacing: 0;
+        line-height: 1.35;
+      }
+
+      h3 {
+        font-size: 16px;
+        font-weight: 950;
+        line-height: 1.35;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 750;
+      }
+
+      .small {
+        color: rgba(23, 32, 38, 0.48);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .item {
+        display: grid;
+        grid-template-columns: 112px 1fr;
+        gap: 14px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .item:last-child {
+        border-bottom: 0;
+      }
+
+      .item-image {
+        width: 112px;
+        height: 112px;
+        border: 0;
+        border-radius: 8px;
+        background: rgba(23, 32, 38, 0.06);
+        overflow: hidden;
+        padding: 0;
+      }
+
+      .item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .item-body {
+        min-width: 0;
+      }
+
+      .item-title-row {
+        display: grid;
+        grid-template-columns: 1fr 40px;
+        gap: 8px;
+      }
+
+      .title-button {
+        min-width: 0;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        text-align: left;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 6px;
+        color: rgba(23, 32, 38, 0.56);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .price {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        font-size: 20px;
+        font-weight: 950;
+      }
+
+      .tag {
+        border-radius: 8px;
+        background: rgba(217, 249, 157, 0.62);
+        color: var(--ocean);
+        padding: 5px 8px;
+        font-size: 12px;
+        font-weight: 950;
+      }
+
+      .heart {
+        display: inline-grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: rgba(23, 32, 38, 0.42);
+        font-size: 20px;
+      }
+
+      .heart.active {
+        color: var(--coral);
+      }
+
+      .detail-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 18px;
+      }
+
+      .hero-image {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        background: rgba(23, 32, 38, 0.06);
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .profile-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .avatar {
+        flex: 0 0 auto;
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: var(--ocean);
+        color: white;
+        font-size: 15px;
+        font-weight: 950;
+      }
+
+      .avatar.large {
+        width: 60px;
+        height: 60px;
+        font-size: 22px;
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .three-col {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .stat {
+        border-radius: 8px;
+        background: #f4f7f5;
+        padding: 14px;
+      }
+
+      .stat strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 24px;
+        font-weight: 950;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .post,
+      .thread,
+      .report {
+        border-bottom: 1px solid var(--line);
+        padding: 16px 18px;
+      }
+
+      .post:last-child,
+      .thread:last-child,
+      .report:last-child {
+        border-bottom: 0;
+      }
+
+      .thread {
+        display: grid;
+        grid-template-columns: 48px 1fr 72px;
+        gap: 12px;
+        align-items: start;
+        text-align: left;
+        width: 100%;
+        border-left: 0;
+        border-right: 0;
+        border-top: 0;
+        background: white;
+      }
+
+      .chat-box {
+        display: flex;
+        min-height: calc(100vh - 180px);
+        flex-direction: column;
+      }
+
+      .messages {
+        flex: 1;
+        display: grid;
+        align-content: start;
+        gap: 10px;
+        padding: 16px;
+        background: #f4f7f5;
+      }
+
+      .bubble-row {
+        display: flex;
+      }
+
+      .bubble-row.mine {
+        justify-content: flex-end;
+      }
+
+      .bubble {
+        max-width: 78%;
+        border-radius: 8px;
+        background: white;
+        padding: 10px 12px;
+        line-height: 1.5;
+      }
+
+      .bubble-row.mine .bubble {
+        background: var(--ocean);
+        color: white;
+      }
+
+      .chat-form {
+        display: grid;
+        grid-template-columns: 1fr 48px;
+        gap: 8px;
+        padding: 12px;
+        border-top: 1px solid var(--line);
+      }
+
+      .deal-panel {
+        display: grid;
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+        background: white;
+        padding: 14px 16px;
+      }
+
+      .deal-actions {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .deal-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #f4f7f5;
+        padding: 12px;
+      }
+
+      .deal-card strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 16px;
+        line-height: 1.35;
+      }
+
+      .deal-form {
+        display: grid;
+        gap: 10px;
+        border: 1px solid rgba(15, 118, 110, 0.18);
+        border-radius: 8px;
+        background: rgba(217, 249, 157, 0.22);
+        padding: 12px;
+      }
+
+      .empty {
+        padding: 36px 18px;
+        text-align: center;
+        color: var(--muted);
+        font-weight: 850;
+      }
+
+      .notice {
+        border: 1px solid rgba(15, 118, 110, 0.18);
+        border-radius: 8px;
+        background: rgba(217, 249, 157, 0.35);
+        padding: 12px 14px;
+        color: var(--ocean);
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .error {
+        border: 1px solid rgba(239, 98, 108, 0.24);
+        border-radius: 8px;
+        background: rgba(239, 98, 108, 0.08);
+        padding: 12px 14px;
+        color: var(--coral);
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .nav {
+        position: fixed;
+        inset: auto 0 0;
+        z-index: 30;
+        border-top: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(16px);
+      }
+
+      .nav-inner {
+        max-width: 1040px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        height: 64px;
+      }
+
+      .nav button {
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: 4px;
+        border: 0;
+        background: transparent;
+        color: rgba(23, 32, 38, 0.58);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .nav button.active {
+        color: var(--ocean);
+      }
+
+      .nav-icon {
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+      }
+
+      .nav button[data-route="new"] .nav-icon {
+        width: 25px;
+        height: 25px;
+      }
+
+      .nav-label {
+        line-height: 1;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 78px;
+        z-index: 40;
+        transform: translateX(-50%);
+        max-width: min(420px, calc(100vw - 28px));
+        border-radius: 8px;
+        background: var(--ink);
+        color: white;
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 850;
+        box-shadow: var(--shadow);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      @media (max-width: 820px) {
+        .detail-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .screen {
+          padding: 14px 14px 88px;
+        }
+
+        .filters,
+        .two-col,
+        .three-col {
+          grid-template-columns: 1fr;
+        }
+
+        .item {
+          grid-template-columns: 104px 1fr;
+          gap: 12px;
+          padding: 14px;
+        }
+
+        .item-image {
+          width: 104px;
+          height: 104px;
+        }
+
+        .thread {
+          grid-template-columns: 44px 1fr;
+        }
+
+        .thread-time {
+          grid-column: 2;
+          text-align: left !important;
+        }
+
+        .deal-actions {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg aria-hidden="true" class="hidden" xmlns="http://www.w3.org/2000/svg">
+      <symbol id="icon-home" viewBox="0 0 24 24">
+        <path d="m3 10.8 9-7.2 9 7.2" />
+        <path d="M5 10v10h14V10" />
+        <path d="M9.5 20v-6h5v6" />
+      </symbol>
+      <symbol id="icon-community" viewBox="0 0 24 24">
+        <path d="M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+        <circle cx="9.5" cy="7" r="4" />
+        <path d="M22 20v-2a4 4 0 0 0-3-3.9" />
+        <path d="M16 3.1a4 4 0 0 1 0 7.8" />
+      </symbol>
+      <symbol id="icon-plus-circle" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 8v8" />
+        <path d="M8 12h8" />
+      </symbol>
+      <symbol id="icon-chat" viewBox="0 0 24 24">
+        <path d="M21 12a8 8 0 0 1-8 8H7l-4 2 1.4-4.2A8 8 0 1 1 21 12Z" />
+        <path d="M8 11h8" />
+        <path d="M8 15h5" />
+      </symbol>
+      <symbol id="icon-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+      </symbol>
+    </svg>
+
+    <header class="top">
+      <div class="wrap top-inner">
+        <button class="brand-button" data-action="go" data-route="home" type="button">
+          <div class="brand">동네장터</div>
+          <div class="place" id="current-place">성수동</div>
+        </button>
+        <div class="top-actions">
+          <button class="icon-button" data-action="go" data-route="admin" title="관리자" aria-label="관리자" type="button">운</button>
+          <button class="icon-button" data-action="notify" title="알림" aria-label="알림" type="button">🔔</button>
+          <button class="avatar-button" id="avatar-button" data-action="go" data-route="settings" title="내 정보" aria-label="내 정보" type="button">민</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="screen" id="app" aria-live="polite"></main>
+
+    <nav class="nav" aria-label="하단 메뉴">
+      <div class="nav-inner">
+        <button data-action="go" data-route="home" type="button">
+          <svg class="nav-icon"><use href="#icon-home"></use></svg>
+          <span class="nav-label">홈</span>
+        </button>
+        <button data-action="go" data-route="community" type="button">
+          <svg class="nav-icon"><use href="#icon-community"></use></svg>
+          <span class="nav-label">동네</span>
+        </button>
+        <button data-action="go" data-route="new" type="button">
+          <svg class="nav-icon"><use href="#icon-plus-circle"></use></svg>
+          <span class="nav-label">등록</span>
+        </button>
+        <button data-action="go" data-route="chats" type="button">
+          <svg class="nav-icon"><use href="#icon-chat"></use></svg>
+          <span class="nav-label">채팅</span>
+        </button>
+        <button data-action="go" data-route="settings" type="button">
+          <svg class="nav-icon"><use href="#icon-user"></use></svg>
+          <span class="nav-label">내 정보</span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="toast hidden" id="toast"></div>
+
+    <script>
+      const STORAGE_KEY = "dongne-jangteo-preview-v2";
+      const categories = ["전체", "디지털", "가구", "생활", "스포츠", "패션"];
+      const neighborhoods = {
+        "성수동": { lat: 37.5446, lng: 127.0557 },
+        "서울숲": { lat: 37.5441, lng: 127.0438 },
+        "왕십리": { lat: 37.5615, lng: 127.0377 },
+        "건대입구": { lat: 37.5404, lng: 127.0692 },
+        "한남동": { lat: 37.5345, lng: 127.0018 }
+      };
+
+      const fallbackImages = {
+        "디지털": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80",
+        "가구": "https://images.unsplash.com/photo-1499933374294-4584851497cc?auto=format&fit=crop&w=900&q=80",
+        "생활": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=900&q=80",
+        "스포츠": "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=900&q=80",
+        "패션": "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80"
+      };
+
+      const seed = {
+        currentUserId: "u1",
+        filters: {
+          query: "",
+          category: "전체",
+          neighborhood: "성수동",
+          distance: "6",
+          maxPrice: ""
+        },
+        users: [
+          {
+            id: "u1",
+            name: "민지",
+            email: "minji@dongne.test",
+            password: "password123",
+            role: "USER",
+            avatarColor: "#ef626c",
+            neighborhood: "성수동"
+          },
+          {
+            id: "u2",
+            name: "준호",
+            email: "junho@dongne.test",
+            password: "password123",
+            role: "USER",
+            avatarColor: "#2563eb",
+            neighborhood: "왕십리"
+          },
+          {
+            id: "u3",
+            name: "사라",
+            email: "sara@dongne.test",
+            password: "password123",
+            role: "USER",
+            avatarColor: "#7c3aed",
+            neighborhood: "서울숲"
+          },
+          {
+            id: "u4",
+            name: "운영자",
+            email: "admin@dongne.test",
+            password: "password123",
+            role: "ADMIN",
+            avatarColor: "#0f766e",
+            neighborhood: "성수동"
+          }
+        ],
+        listings: [
+          {
+            id: "p1",
+            title: "거의 새것인 접이식 자전거",
+            description: "출퇴근용으로 세 번 탔고 실내 보관했습니다. 성수역 근처에서 거래 가능해요.",
+            price: 185000,
+            category: "스포츠",
+            image: fallbackImages["스포츠"],
+            neighborhood: "성수동",
+            sellerId: "u2",
+            status: "ACTIVE",
+            favoriteIds: ["u1"],
+            createdAt: Date.now() - 12 * 60 * 1000
+          },
+          {
+            id: "p2",
+            title: "원목 사이드 테이블",
+            description: "소파 옆에 두기 좋은 작은 테이블입니다. 생활 흠집은 사진 참고해주세요.",
+            price: 42000,
+            category: "가구",
+            image: fallbackImages["가구"],
+            neighborhood: "서울숲",
+            sellerId: "u3",
+            status: "ACTIVE",
+            favoriteIds: [],
+            createdAt: Date.now() - 56 * 60 * 1000
+          },
+          {
+            id: "p3",
+            title: "미개봉 핸드드립 세트",
+            description: "선물 받았는데 같은 제품이 있어 올립니다. 필터 포함입니다.",
+            price: 29000,
+            category: "생활",
+            image: fallbackImages["생활"],
+            neighborhood: "왕십리",
+            sellerId: "u2",
+            status: "ACTIVE",
+            favoriteIds: [],
+            createdAt: Date.now() - 3 * 60 * 60 * 1000
+          },
+          {
+            id: "p4",
+            title: "아이패드 파우치 11인치",
+            description: "탄탄한 소재이고 안쪽이 부드럽습니다. 직거래 우선입니다.",
+            price: 15000,
+            category: "디지털",
+            image: fallbackImages["디지털"],
+            neighborhood: "성수동",
+            sellerId: "u4",
+            status: "ACTIVE",
+            favoriteIds: [],
+            createdAt: Date.now() - 5 * 60 * 60 * 1000
+          }
+        ],
+        posts: [
+          {
+            id: "c1",
+            title: "성수동 밤 산책길 추천해요",
+            body: "서울숲 쪽 길이 조용하고 가로등도 밝아서 좋았습니다.",
+            topic: "동네생활",
+            neighborhood: "성수동",
+            authorId: "u1",
+            createdAt: Date.now() - 31 * 60 * 1000
+          },
+          {
+            id: "c2",
+            title: "주말에 책 교환 모임 열어볼까요?",
+            body: "읽고 난 책 한 권씩 가져와서 가볍게 나누면 좋겠어요.",
+            topic: "모임",
+            neighborhood: "서울숲",
+            authorId: "u3",
+            createdAt: Date.now() - 4 * 60 * 60 * 1000
+          }
+        ],
+        chats: [
+          {
+            id: "t1",
+            listingId: "p1",
+            buyerId: "u1",
+            sellerId: "u2",
+            messages: [
+              { id: "m1", senderId: "u1", body: "안녕하세요. 아직 거래 가능할까요?", createdAt: Date.now() - 24 * 60 * 1000 },
+              { id: "m2", senderId: "u2", body: "네 가능해요. 오늘 저녁 괜찮으세요?", createdAt: Date.now() - 15 * 60 * 1000 }
+            ],
+            appointment: null,
+            payment: null,
+            completedAt: null,
+            updatedAt: Date.now() - 15 * 60 * 1000
+          }
+        ],
+        reports: [],
+        blockedIds: [],
+        tradePanel: null
+      };
+
+      let state = loadState();
+
+      function loadState() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          if (saved && Array.isArray(saved.listings) && Array.isArray(saved.users)) return normalizeState(saved);
+        } catch (error) {
+          console.warn(error);
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+        return normalizeState(structuredClone(seed));
+      }
+
+      function normalizeState(data) {
+        const next = {
+          ...structuredClone(seed),
+          ...data,
+          filters: { ...seed.filters, ...(data.filters || {}) },
+          users: data.users || seed.users,
+          listings: (data.listings || seed.listings).map((listing) => ({
+            favoriteIds: [],
+            ...listing
+          })),
+          posts: data.posts || seed.posts,
+          reports: data.reports || [],
+          blockedIds: data.blockedIds || [],
+          tradePanel: data.tradePanel || null
+        };
+        next.chats = (data.chats || seed.chats).map((thread) => ({
+          appointment: null,
+          payment: null,
+          completedAt: null,
+          ...thread,
+          messages: thread.messages || []
+        }));
+        return next;
+      }
+
+      function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function currentUser() {
+        return state.users.find((user) => user.id === state.currentUserId) || null;
+      }
+
+      function userById(id) {
+        return state.users.find((user) => user.id === id) || { id, name: "알 수 없음", avatarColor: "#172026", neighborhood: "동네" };
+      }
+
+      function listingById(id) {
+        return state.listings.find((listing) => listing.id === id);
+      }
+
+      function postById(id) {
+        return state.posts.find((post) => post.id === id);
+      }
+
+      function activeRoute() {
+        const hash = decodeURIComponent(location.hash.replace(/^#/, ""));
+        if (!hash) return { name: "home" };
+        const [name, value] = hash.split("=");
+        return { name, value };
+      }
+
+      function go(route, value) {
+        location.hash = value ? `${route}=${encodeURIComponent(value)}` : route;
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function formatPrice(price) {
+        return `${Number(price || 0).toLocaleString("ko-KR")}원`;
+      }
+
+      function relativeTime(ts) {
+        const diff = Date.now() - Number(ts || Date.now());
+        const minutes = Math.max(1, Math.floor(diff / 60000));
+        if (minutes < 60) return `${minutes}분 전`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}시간 전`;
+        return `${Math.floor(hours / 24)}일 전`;
+      }
+
+      function formatDateTime(value) {
+        if (!value) return "";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "";
+        return new Intl.DateTimeFormat("ko-KR", {
+          month: "long",
+          day: "numeric",
+          weekday: "short",
+          hour: "2-digit",
+          minute: "2-digit"
+        }).format(date);
+      }
+
+      function defaultAppointmentTime() {
+        const date = new Date(Date.now() + 2 * 60 * 60 * 1000);
+        date.setMinutes(Math.ceil(date.getMinutes() / 10) * 10, 0, 0);
+        const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+        return local.toISOString().slice(0, 16);
+      }
+
+      function distanceKm(fromName, toName) {
+        const from = neighborhoods[fromName] || neighborhoods["성수동"];
+        const to = neighborhoods[toName] || neighborhoods["성수동"];
+        const radius = 6371;
+        const dLat = radians(to.lat - from.lat);
+        const dLng = radians(to.lng - from.lng);
+        const lat1 = radians(from.lat);
+        const lat2 = radians(to.lat);
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+        return radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      }
+
+      function radians(value) {
+        return (value * Math.PI) / 180;
+      }
+
+      function avatar(user, size = "") {
+        return `<span class="avatar ${size}" style="background:${escapeHtml(user.avatarColor || "#0f766e")}">${escapeHtml((user.name || "?").slice(0, 1))}</span>`;
+      }
+
+      function toast(message) {
+        const el = document.getElementById("toast");
+        el.textContent = message;
+        el.classList.remove("hidden");
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(() => el.classList.add("hidden"), 1800);
+      }
+
+      function requireLogin() {
+        if (currentUser()) return true;
+        toast("로그인이 필요합니다.");
+        go("settings");
+        return false;
+      }
+
+      function render() {
+        const route = activeRoute();
+        const app = document.getElementById("app");
+        updateChrome(route);
+
+        if (route.name === "product") app.innerHTML = renderProduct(route.value);
+        else if (route.name === "new") app.innerHTML = renderNewProduct();
+        else if (route.name === "community") app.innerHTML = renderCommunity();
+        else if (route.name === "chats") app.innerHTML = renderChats();
+        else if (route.name === "chat") app.innerHTML = renderChat(route.value);
+        else if (route.name === "profile") app.innerHTML = renderProfile(route.value);
+        else if (route.name === "settings") app.innerHTML = renderSettings();
+        else if (route.name === "admin") app.innerHTML = renderAdmin();
+        else app.innerHTML = renderHome();
+      }
+
+      function updateChrome(route) {
+        const user = currentUser();
+        const place = user?.neighborhood || state.filters.neighborhood || "성수동";
+        document.getElementById("current-place").textContent = place;
+        const avatarButton = document.getElementById("avatar-button");
+        avatarButton.textContent = user ? user.name.slice(0, 1) : "입";
+        avatarButton.style.background = user?.avatarColor || "var(--ink)";
+        document.querySelectorAll(".nav button").forEach((button) => {
+          const buttonRoute = button.dataset.route;
+          const active =
+            route.name === buttonRoute ||
+            (buttonRoute === "home" && route.name === "product") ||
+            (buttonRoute === "chats" && route.name === "chat");
+          button.classList.toggle("active", active);
+        });
+      }
+
+      function visibleListings() {
+        const user = currentUser();
+        const filters = state.filters;
+        const query = filters.query.trim().toLowerCase();
+        const maxPrice = Number(filters.maxPrice || 0);
+        const maxDistance = Number(filters.distance || 0);
+        const blocked = new Set(state.blockedIds || []);
+
+        return state.listings
+          .filter((listing) => listing.status !== "HIDDEN")
+          .filter((listing) => !blocked.has(listing.sellerId))
+          .filter((listing) => !query || `${listing.title} ${listing.description}`.toLowerCase().includes(query))
+          .filter((listing) => filters.category === "전체" || listing.category === filters.category)
+          .filter((listing) => !maxPrice || listing.price <= maxPrice)
+          .map((listing) => ({
+            ...listing,
+            distance: Number(distanceKm(user?.neighborhood || filters.neighborhood, listing.neighborhood).toFixed(1))
+          }))
+          .filter((listing) => !maxDistance || listing.distance <= maxDistance)
+          .sort((a, b) => b.createdAt - a.createdAt);
+      }
+
+      function renderHome() {
+        const listings = visibleListings();
+        const filters = state.filters;
+        return `
+          <section class="grid">
+            <div class="toolbar">
+              <label>
+                <span class="sr-only">검색</span>
+                <input class="input" data-action="filter" data-field="query" value="${escapeHtml(filters.query)}" placeholder="찾는 물건" aria-label="검색" />
+              </label>
+              <button class="plus" data-action="go" data-route="new" aria-label="상품 등록" type="button">+</button>
+            </div>
+
+            <section class="plain-surface filters">
+              <label>동네
+                <select class="select" data-action="filter" data-field="neighborhood">
+                  ${Object.keys(neighborhoods).map((name) => `<option ${name === filters.neighborhood ? "selected" : ""}>${escapeHtml(name)}</option>`).join("")}
+                </select>
+              </label>
+              <label>거리
+                <select class="select" data-action="filter" data-field="distance">
+                  ${[
+                    ["2", "2km"],
+                    ["6", "6km"],
+                    ["12", "12km"],
+                    ["0", "전체"]
+                  ]
+                    .map(([value, label]) => `<option value="${value}" ${value === filters.distance ? "selected" : ""}>${label}</option>`)
+                    .join("")}
+                </select>
+              </label>
+              <label>최고가
+                <input class="input" data-action="filter" data-field="maxPrice" inputmode="numeric" value="${escapeHtml(filters.maxPrice)}" placeholder="전체" aria-label="최고가" />
+              </label>
+            </section>
+
+            <section class="chips" aria-label="카테고리">
+              ${categories
+                .map(
+                  (category) => `
+                    <button class="chip ${filters.category === category ? "active" : ""}" data-action="category" data-category="${escapeHtml(category)}" type="button">
+                      ${escapeHtml(category)}
+                    </button>
+                  `
+                )
+                .join("")}
+            </section>
+
+            <section class="surface">
+              <div class="list-head">
+                <div>
+                  <h1>${escapeHtml(filters.neighborhood)} 장터</h1>
+                  <p class="muted">${listings.length}개 상품</p>
+                </div>
+                <button class="ghost" data-action="go" data-route="community" type="button">동네 글</button>
+              </div>
+              ${listings.length ? listings.map(renderListingCard).join("") : `<p class="empty">조건에 맞는 상품이 없습니다.</p>`}
+            </section>
+          </section>
+        `;
+      }
+
+      function renderListingCard(listing) {
+        const seller = userById(listing.sellerId);
+        const user = currentUser();
+        const isFavorite = user && listing.favoriteIds.includes(user.id);
+        return `
+          <article class="item">
+            <button class="item-image" data-action="go" data-route="product" data-value="${escapeHtml(listing.id)}" type="button" aria-label="${escapeHtml(listing.title)} 상세">
+              <img src="${escapeHtml(listing.image)}" alt="" />
+            </button>
+            <div class="item-body">
+              <div class="item-title-row">
+                <button class="title-button" data-action="go" data-route="product" data-value="${escapeHtml(listing.id)}" type="button">
+                  <h2>${escapeHtml(listing.title)}</h2>
+                  <div class="meta">
+                    <span>${escapeHtml(listing.neighborhood)}</span>
+                    <span>${listing.distance ?? Number(distanceKm(currentUser()?.neighborhood || state.filters.neighborhood, listing.neighborhood).toFixed(1))}km</span>
+                    <span>${relativeTime(listing.createdAt)}</span>
+                  </div>
+                </button>
+                <button class="heart ${isFavorite ? "active" : ""}" data-action="favorite" data-id="${escapeHtml(listing.id)}" type="button" aria-label="관심 상품">${isFavorite ? "♥" : "♡"}</button>
+              </div>
+              <div class="price">
+                ${formatPrice(listing.price)}
+                <span class="tag">${escapeHtml(listing.category)}</span>
+                ${listing.status !== "ACTIVE" ? `<span class="tag">${statusLabel(listing.status)}</span>` : ""}
+              </div>
+              <p class="small">판매자 ${escapeHtml(seller.name)} · 관심 ${listing.favoriteIds.length}</p>
+            </div>
+          </article>
+        `;
+      }
+
+      function renderProduct(id) {
+        const listing = listingById(id);
+        if (!listing || listing.status === "HIDDEN") return `<section class="surface"><p class="empty">상품을 찾을 수 없습니다.</p></section>`;
+        const user = currentUser();
+        const seller = userById(listing.sellerId);
+        const mine = user?.id === listing.sellerId;
+        const isFavorite = user && listing.favoriteIds.includes(user.id);
+        return `
+          <section class="grid">
+            <button class="secondary" data-action="go" data-route="home" type="button">← 목록으로</button>
+            <article class="detail-grid">
+              <section class="surface">
+                <img class="hero-image" src="${escapeHtml(listing.image)}" alt="" />
+                <div class="panel grid">
+                  <div class="meta">
+                    <span>${escapeHtml(listing.category)}</span>
+                    <span>${escapeHtml(listing.neighborhood)}</span>
+                    <span>${Number(distanceKm(user?.neighborhood || state.filters.neighborhood, listing.neighborhood).toFixed(1))}km</span>
+                    <span>${relativeTime(listing.createdAt)}</span>
+                  </div>
+                  <h1>${escapeHtml(listing.title)}</h1>
+                  <p class="price">${formatPrice(listing.price)}</p>
+                  <p style="white-space:pre-line; line-height:1.65; color:rgba(23,32,38,.78)">${escapeHtml(listing.description)}</p>
+                </div>
+              </section>
+              <aside class="grid" style="align-content:start">
+                <section class="surface panel grid">
+                  <button class="title-button profile-row" data-action="go" data-route="profile" data-value="${escapeHtml(seller.id)}" type="button">
+                    ${avatar(seller, "large")}
+                    <span style="min-width:0">
+                      <h2>${escapeHtml(seller.name)}</h2>
+                      <p class="muted">${escapeHtml(seller.neighborhood)}</p>
+                    </span>
+                  </button>
+                  <div class="notice">거래 전 상품 상태와 장소를 한 번 더 확인하세요.</div>
+                </section>
+                <section class="surface panel grid">
+                  <button class="secondary" data-action="favorite" data-id="${escapeHtml(listing.id)}" type="button">${isFavorite ? "♥" : "♡"} 관심 ${listing.favoriteIds.length}</button>
+                  ${
+                    mine
+                      ? `
+                        <select class="select" data-action="status" data-id="${escapeHtml(listing.id)}">
+                          ${["ACTIVE", "RESERVED", "SOLD", "HIDDEN"].map((status) => `<option value="${status}" ${listing.status === status ? "selected" : ""}>${statusLabel(status)}</option>`).join("")}
+                        </select>
+                        <button class="dark" data-action="delete-listing" data-id="${escapeHtml(listing.id)}" type="button">삭제</button>
+                      `
+                      : `
+                        <button class="primary" data-action="start-chat" data-id="${escapeHtml(listing.id)}" type="button">채팅 시작</button>
+                        <div class="two-col">
+                          <button class="danger" data-action="report" data-target="listing" data-id="${escapeHtml(listing.id)}" type="button">신고</button>
+                          <button class="secondary" data-action="block" data-id="${escapeHtml(seller.id)}" type="button">차단</button>
+                        </div>
+                      `
+                  }
+                </section>
+              </aside>
+            </article>
+          </section>
+        `;
+      }
+
+      function renderNewProduct() {
+        const user = currentUser();
+        if (!user) return renderLoginBox("상품 등록은 로그인 후 사용할 수 있습니다.");
+        return `
+          <section class="detail-grid">
+            <section class="surface">
+              <img class="hero-image" id="new-preview" src="${fallbackImages["생활"]}" alt="" />
+              <div class="panel">
+                <p class="muted">${escapeHtml(user.neighborhood)}에 등록됩니다.</p>
+              </div>
+            </section>
+            <form class="surface panel form-grid" data-action="create-listing">
+              <h1>상품 등록</h1>
+              <label>상품명
+                <input class="input" name="title" required minlength="2" placeholder="예: 깨끗한 캠핑 의자" />
+              </label>
+              <div class="two-col">
+                <label>가격
+                  <input class="input" name="price" inputmode="numeric" required placeholder="35000" />
+                </label>
+                <label>카테고리
+                  <select class="select" name="category" data-action="preview-category">
+                    ${categories.filter((item) => item !== "전체").map((item) => `<option>${escapeHtml(item)}</option>`).join("")}
+                  </select>
+                </label>
+              </div>
+              <label>이미지 URL
+                <input class="input" name="image" data-action="preview-image" placeholder="비워두면 기본 이미지" />
+              </label>
+              <label>설명
+                <textarea class="textarea" name="description" required minlength="5" placeholder="상태, 거래 장소, 참고할 점을 적어주세요."></textarea>
+              </label>
+              <button class="primary" type="submit">등록하기</button>
+            </form>
+          </section>
+        `;
+      }
+
+      function renderCommunity() {
+        const user = currentUser();
+        const topics = ["전체", "동네생활", "모임", "질문", "추천"];
+        const selected = state.communityTopic || "전체";
+        const place = user?.neighborhood || state.filters.neighborhood;
+        const posts = state.posts
+          .filter((post) => post.neighborhood === place)
+          .filter((post) => selected === "전체" || post.topic === selected)
+          .sort((a, b) => b.createdAt - a.createdAt);
+        return `
+          <section class="detail-grid">
+            <form class="surface panel form-grid" data-action="create-post">
+              <h1>동네 글쓰기</h1>
+              ${user ? "" : `<p class="error">로그인 후 글을 작성할 수 있습니다.</p>`}
+              <label>주제
+                <select class="select" name="topic">
+                  ${topics.filter((item) => item !== "전체").map((item) => `<option>${escapeHtml(item)}</option>`).join("")}
+                </select>
+              </label>
+              <label>제목
+                <input class="input" name="title" ${user ? "" : "disabled"} required />
+              </label>
+              <label>내용
+                <textarea class="textarea" name="body" ${user ? "" : "disabled"} required></textarea>
+              </label>
+              <button class="primary" ${user ? "" : "disabled"} type="submit">올리기</button>
+            </form>
+            <section class="surface">
+              <div class="list-head">
+                <div>
+                  <h1>${escapeHtml(place)} 생활</h1>
+                  <p class="muted">${posts.length}개 글</p>
+                </div>
+              </div>
+              <div class="chips" style="padding:14px 18px; border-bottom:1px solid var(--line)">
+                ${topics
+                  .map(
+                    (topic) => `<button class="chip ${selected === topic ? "active" : ""}" data-action="topic" data-topic="${escapeHtml(topic)}" type="button">${escapeHtml(topic)}</button>`
+                  )
+                  .join("")}
+              </div>
+              ${
+                posts.length
+                  ? posts
+                      .map((post) => {
+                        const author = userById(post.authorId);
+                        return `
+                          <article class="post">
+                            <div style="display:flex; justify-content:space-between; gap:12px">
+                              <div class="profile-row">
+                                ${avatar(author)}
+                                <div>
+                                  <h2>${escapeHtml(post.title)}</h2>
+                                  <p class="small">${escapeHtml(post.topic)} · ${escapeHtml(post.neighborhood)} · ${relativeTime(post.createdAt)}</p>
+                                </div>
+                              </div>
+                              <button class="danger" data-action="report" data-target="post" data-id="${escapeHtml(post.id)}" type="button">신고</button>
+                            </div>
+                            <p style="margin-top:12px; line-height:1.6; color:rgba(23,32,38,.76)">${escapeHtml(post.body)}</p>
+                          </article>
+                        `;
+                      })
+                      .join("")
+                  : `<p class="empty">아직 글이 없습니다.</p>`
+              }
+            </section>
+          </section>
+        `;
+      }
+
+      function renderChats() {
+        const user = currentUser();
+        if (!user) return renderLoginBox("채팅은 로그인 후 사용할 수 있습니다.");
+        const threads = state.chats
+          .filter((thread) => thread.buyerId === user.id || thread.sellerId === user.id)
+          .sort((a, b) => b.updatedAt - a.updatedAt);
+        return `
+          <section class="surface">
+            <div class="list-head">
+              <div>
+                <h1>채팅</h1>
+                <p class="muted">${threads.length}개 대화</p>
+              </div>
+              <button class="ghost" data-action="go" data-route="home" type="button">상품 보기</button>
+            </div>
+            ${
+              threads.length
+                ? threads
+                    .map((thread) => {
+                      const listing = listingById(thread.listingId);
+                      const other = userById(user.id === thread.buyerId ? thread.sellerId : thread.buyerId);
+                      const last = thread.messages.at(-1);
+                      return `
+                        <button class="thread" data-action="go" data-route="chat" data-value="${escapeHtml(thread.id)}" type="button">
+                          ${avatar(other)}
+                          <span style="min-width:0">
+                            <h2>${escapeHtml(other.name)}</h2>
+                            <p class="muted" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${escapeHtml(last?.body || "대화를 시작해보세요.")}</p>
+                            <p class="small">${escapeHtml(listing?.title || "상품")} · ${listing ? formatPrice(listing.price) : ""}</p>
+                          </span>
+                          <span class="small thread-time" style="text-align:right">${relativeTime(thread.updatedAt)}</span>
+                        </button>
+                      `;
+                    })
+                    .join("")
+                : `<p class="empty">아직 채팅이 없습니다. 상품 상세에서 채팅을 시작해보세요.</p>`
+            }
+          </section>
+        `;
+      }
+
+      function renderDealPanel(thread, listing, user) {
+        const appointment = thread.appointment;
+        const payment = thread.payment;
+        const completed = Boolean(thread.completedAt || listing?.status === "SOLD");
+        const activePanel = state.tradePanel?.threadId === thread.id ? state.tradePanel.type : "";
+        const isBuyer = user.id === thread.buyerId;
+        const defaultPlace = `${listing?.neighborhood || user.neighborhood}역 근처`;
+        const defaultAmount = listing?.price || 0;
+
+        return `
+          <section class="deal-panel">
+            <div class="three-col">
+              <div class="deal-card">
+                <p class="small">약속</p>
+                <strong>${appointment ? `${formatDateTime(appointment.time)} · ${escapeHtml(appointment.place)}` : "아직 없음"}</strong>
+              </div>
+              <div class="deal-card">
+                <p class="small">송금</p>
+                <strong>${payment ? `${formatPrice(payment.amount)} · ${escapeHtml(payment.method)}` : "대기"}</strong>
+              </div>
+              <div class="deal-card">
+                <p class="small">거래</p>
+                <strong>${completed ? "거래완료" : statusLabel(listing?.status || "ACTIVE")}</strong>
+              </div>
+            </div>
+            <div class="deal-actions">
+              <button class="secondary" data-action="open-deal-panel" data-panel="appointment" data-id="${escapeHtml(thread.id)}" ${completed ? "disabled" : ""} type="button">약속잡기</button>
+              <button class="secondary" data-action="open-deal-panel" data-panel="payment" data-id="${escapeHtml(thread.id)}" ${completed || !isBuyer ? "disabled" : ""} type="button">송금하기</button>
+              <button class="${completed ? "secondary" : "primary"}" data-action="complete-trade" data-id="${escapeHtml(thread.id)}" ${completed ? "disabled" : ""} type="button">
+                ${completed ? "완료됨" : "거래완료"}
+              </button>
+            </div>
+            ${
+              activePanel === "appointment"
+                ? `
+                  <form class="deal-form" data-action="save-appointment" data-id="${escapeHtml(thread.id)}">
+                    <h2>약속잡기</h2>
+                    <div class="two-col">
+                      <label>시간
+                        <input class="input" name="time" type="datetime-local" value="${escapeHtml(appointment?.time || defaultAppointmentTime())}" required />
+                      </label>
+                      <label>장소
+                        <input class="input" name="place" value="${escapeHtml(appointment?.place || defaultPlace)}" required />
+                      </label>
+                    </div>
+                    <label>메모
+                      <input class="input" name="memo" value="${escapeHtml(appointment?.memo || "")}" placeholder="예: 2번 출구 앞" />
+                    </label>
+                    <button class="primary" type="submit">약속 저장</button>
+                  </form>
+                `
+                : ""
+            }
+            ${
+              activePanel === "payment"
+                ? `
+                  <form class="deal-form" data-action="send-payment" data-id="${escapeHtml(thread.id)}">
+                    <h2>송금하기</h2>
+                    <div class="two-col">
+                      <label>금액
+                        <input class="input" name="amount" inputmode="numeric" value="${escapeHtml(payment?.amount || defaultAmount)}" required />
+                      </label>
+                      <label>방식
+                        <select class="select" name="method">
+                          ${["동네페이", "계좌이체", "현금"].map((method) => `<option ${payment?.method === method ? "selected" : ""}>${method}</option>`).join("")}
+                        </select>
+                      </label>
+                    </div>
+                    <button class="primary" type="submit">송금 완료</button>
+                  </form>
+                `
+                : ""
+            }
+          </section>
+        `;
+      }
+
+      function renderChat(id) {
+        const user = currentUser();
+        if (!user) return renderLoginBox("채팅은 로그인 후 사용할 수 있습니다.");
+        const thread = state.chats.find((item) => item.id === id);
+        if (!thread || (thread.buyerId !== user.id && thread.sellerId !== user.id)) {
+          return `<section class="surface"><p class="empty">채팅방을 찾을 수 없습니다.</p></section>`;
+        }
+        const listing = listingById(thread.listingId);
+        const other = userById(user.id === thread.buyerId ? thread.sellerId : thread.buyerId);
+        return `
+          <section class="surface chat-box">
+            <div class="list-head">
+              <div class="profile-row">
+                ${avatar(other)}
+                <div style="min-width:0">
+                  <h1>${escapeHtml(other.name)}</h1>
+                  <button class="ghost" style="padding:0; min-height:auto" data-action="go" data-route="product" data-value="${escapeHtml(thread.listingId)}" type="button">
+                    ${escapeHtml(listing?.title || "상품")} · ${listing ? formatPrice(listing.price) : ""}
+                  </button>
+                </div>
+              </div>
+              ${listing?.image ? `<img src="${escapeHtml(listing.image)}" alt="" style="width:56px;height:56px;border-radius:8px;object-fit:cover" />` : ""}
+            </div>
+            ${renderDealPanel(thread, listing, user)}
+            <div class="messages">
+              ${thread.messages
+                .map(
+                  (message) => `
+                    <div class="bubble-row ${message.senderId === user.id ? "mine" : ""}">
+                      <div class="bubble">
+                        <p>${escapeHtml(message.body)}</p>
+                        <p class="small" style="${message.senderId === user.id ? "color:rgba(255,255,255,.72)" : ""}">${relativeTime(message.createdAt)}</p>
+                      </div>
+                    </div>
+                  `
+                )
+                .join("")}
+            </div>
+            <form class="chat-form" data-action="send-message" data-id="${escapeHtml(thread.id)}">
+              <input class="input" name="body" autocomplete="off" placeholder="메시지" />
+              <button class="primary" style="padding:0" type="submit">전송</button>
+            </form>
+          </section>
+        `;
+      }
+
+      function renderProfile(id) {
+        const profile = userById(id);
+        const listings = state.listings.filter((listing) => listing.sellerId === id && listing.status !== "HIDDEN");
+        const user = currentUser();
+        return `
+          <section class="grid">
+            <div class="surface panel grid">
+              <div style="display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap">
+                <div class="profile-row">
+                  ${avatar(profile, "large")}
+                  <div>
+                    <h1>${escapeHtml(profile.name)}</h1>
+                    <p class="muted">${escapeHtml(profile.neighborhood)}</p>
+                  </div>
+                </div>
+                ${
+                  user?.id !== profile.id
+                    ? `<div style="display:flex; gap:8px"><button class="danger" data-action="report" data-target="user" data-id="${escapeHtml(profile.id)}" type="button">신고</button><button class="secondary" data-action="block" data-id="${escapeHtml(profile.id)}" type="button">차단</button></div>`
+                    : ""
+                }
+              </div>
+              <div class="two-col">
+                <div class="stat"><p class="small">등록 상품</p><strong>${listings.length}</strong></div>
+                <div class="stat"><p class="small">거래 매너</p><strong>좋음</strong></div>
+              </div>
+            </div>
+            <section class="surface">
+              <div class="list-head"><h1>판매 상품</h1></div>
+              ${listings.length ? listings.map((listing) => renderListingCard({ ...listing, distance: Number(distanceKm(currentUser()?.neighborhood || state.filters.neighborhood, listing.neighborhood).toFixed(1)) })).join("") : `<p class="empty">판매 중인 상품이 없습니다.</p>`}
+            </section>
+          </section>
+        `;
+      }
+
+      function renderSettings() {
+        const user = currentUser();
+        if (!user) return renderLoginBox("로그인하거나 새 계정을 만들어 미리보기를 사용할 수 있습니다.");
+        return `
+          <section class="surface panel form-grid" style="max-width:640px; margin:0 auto">
+            <div class="profile-row">
+              ${avatar(user, "large")}
+              <div style="min-width:0">
+                <h1>${escapeHtml(user.name)}</h1>
+                <p class="muted">${escapeHtml(user.email)}</p>
+              </div>
+            </div>
+            <form class="form-grid" data-action="save-user">
+              <label>이름
+                <input class="input" name="name" value="${escapeHtml(user.name)}" required />
+              </label>
+              <label>동네
+                <select class="select" name="neighborhood">
+                  ${Object.keys(neighborhoods).map((name) => `<option ${name === user.neighborhood ? "selected" : ""}>${escapeHtml(name)}</option>`).join("")}
+                </select>
+              </label>
+              <div class="two-col">
+                <button class="primary" type="submit">저장</button>
+                <button class="secondary" data-action="logout" type="button">로그아웃</button>
+              </div>
+            </form>
+            <button class="danger" data-action="reset-demo" type="button">데모 데이터 초기화</button>
+          </section>
+        `;
+      }
+
+      function renderLoginBox(message) {
+        return `
+          <section class="surface panel form-grid" style="max-width:640px; margin:0 auto">
+            <h1>내 정보</h1>
+            <p class="notice">${escapeHtml(message)}</p>
+            <form class="form-grid" data-action="login">
+              <label>이메일
+                <input class="input" name="email" type="email" value="minji@dongne.test" required />
+              </label>
+              <label>비밀번호
+                <input class="input" name="password" type="password" value="password123" required />
+              </label>
+              <button class="primary" type="submit">로그인</button>
+            </form>
+            <form class="form-grid plain-surface" style="padding:14px" data-action="register">
+              <h2>새 계정</h2>
+              <label>이름
+                <input class="input" name="name" required placeholder="이름" />
+              </label>
+              <label>이메일
+                <input class="input" name="email" type="email" required placeholder="you@example.com" />
+              </label>
+              <label>비밀번호
+                <input class="input" name="password" type="password" required placeholder="8자 이상" />
+              </label>
+              <label>동네
+                <select class="select" name="neighborhood">
+                  ${Object.keys(neighborhoods).map((name) => `<option>${escapeHtml(name)}</option>`).join("")}
+                </select>
+              </label>
+              <button class="secondary" type="submit">회원가입</button>
+            </form>
+          </section>
+        `;
+      }
+
+      function renderAdmin() {
+        const user = currentUser();
+        if (!user || user.role !== "ADMIN") {
+          return `
+            <section class="surface panel form-grid" style="max-width:640px; margin:0 auto">
+              <h1>관리자</h1>
+              <p class="error">관리자 계정으로 로그인하면 신고와 숨김 처리를 할 수 있습니다.</p>
+              <p class="muted">테스트 계정: admin@dongne.test / password123</p>
+              <button class="primary" data-action="go" data-route="settings" type="button">로그인으로 이동</button>
+            </section>
+          `;
+        }
+        const activeListings = state.listings.filter((listing) => listing.status === "ACTIVE").length;
+        return `
+          <section class="grid">
+            <div class="surface panel grid">
+              <h1>관리자</h1>
+              <div class="three-col">
+                <div class="stat"><p class="small">회원</p><strong>${state.users.length}</strong></div>
+                <div class="stat"><p class="small">상품</p><strong>${state.listings.length}</strong></div>
+                <div class="stat"><p class="small">판매중</p><strong>${activeListings}</strong></div>
+              </div>
+            </div>
+            <section class="surface">
+              <div class="list-head"><h1>신고</h1><p class="muted">${state.reports.length}건</p></div>
+              ${
+                state.reports.length
+                  ? state.reports
+                      .slice()
+                      .reverse()
+                      .map((report) => {
+                        const targetTitle = report.targetType === "listing" ? listingById(report.targetId)?.title : report.targetType === "post" ? postById(report.targetId)?.title : userById(report.targetId).name;
+                        return `
+                          <article class="report">
+                            <div style="display:flex; justify-content:space-between; gap:12px; align-items:start">
+                              <div>
+                                <p class="small">${escapeHtml(report.targetType)} · ${relativeTime(report.createdAt)} · ${report.resolved ? "처리됨" : "대기"}</p>
+                                <h2>${escapeHtml(report.reason)}</h2>
+                                <p class="muted">${escapeHtml(targetTitle || "대상")}</p>
+                              </div>
+                              <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:end">
+                                ${
+                                  report.targetType === "listing"
+                                    ? `<button class="dark" data-action="admin-hide" data-id="${escapeHtml(report.targetId)}" data-report="${escapeHtml(report.id)}" type="button">숨김</button>`
+                                    : ""
+                                }
+                                <button class="secondary" data-action="admin-resolve" data-id="${escapeHtml(report.id)}" type="button">처리</button>
+                              </div>
+                            </div>
+                          </article>
+                        `;
+                      })
+                      .join("")
+                  : `<p class="empty">신고가 없습니다.</p>`
+              }
+            </section>
+          </section>
+        `;
+      }
+
+      function statusLabel(status) {
+        return {
+          ACTIVE: "판매중",
+          RESERVED: "예약중",
+          SOLD: "거래완료",
+          HIDDEN: "숨김"
+        }[status] || status;
+      }
+
+      document.addEventListener("input", (event) => {
+        const target = event.target;
+        if (target.matches("[data-action='filter']")) {
+          const field = target.dataset.field;
+          const cursor = target.selectionStart;
+          state.filters[field] = target.value;
+          saveState();
+          render();
+          const replacement = document.querySelector(`[data-action='filter'][data-field='${field}']`);
+          if (replacement && typeof replacement.focus === "function") {
+            replacement.focus();
+            if (typeof replacement.setSelectionRange === "function" && typeof cursor === "number") {
+              replacement.setSelectionRange(cursor, cursor);
+            }
+          }
+        }
+        if (target.matches("[data-action='preview-image'], [data-action='preview-category']")) {
+          const form = target.closest("form");
+          const image = form?.elements.image?.value.trim();
+          const category = form?.elements.category?.value || "생활";
+          const preview = document.getElementById("new-preview");
+          if (preview) preview.src = image || fallbackImages[category] || fallbackImages["생활"];
+        }
+      });
+
+      document.addEventListener("change", (event) => {
+        const target = event.target;
+        if (target.matches("[data-action='filter']")) {
+          state.filters[target.dataset.field] = target.value;
+          if (target.dataset.field === "neighborhood") {
+            const user = currentUser();
+            if (user) user.neighborhood = target.value;
+          }
+          saveState();
+          render();
+        }
+        if (target.matches("[data-action='status']")) {
+          const listing = listingById(target.dataset.id);
+          if (listing) {
+            listing.status = target.value;
+            saveState();
+            toast("상품 상태를 변경했습니다.");
+            render();
+          }
+        }
+        if (target.matches("[data-action='preview-category']")) {
+          const preview = document.getElementById("new-preview");
+          if (preview) preview.src = fallbackImages[target.value] || fallbackImages["생활"];
+        }
+      });
+
+      document.addEventListener("submit", (event) => {
+        const form = event.target;
+        const action = form.dataset.action;
+        if (!action) return;
+        event.preventDefault();
+
+        if (action === "create-listing") createListing(form);
+        if (action === "create-post") createPost(form);
+        if (action === "send-message") sendMessage(form);
+        if (action === "save-appointment") saveAppointment(form);
+        if (action === "send-payment") sendPayment(form);
+        if (action === "save-user") saveUser(form);
+        if (action === "login") login(form);
+        if (action === "register") register(form);
+      });
+
+      document.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-action]");
+        if (!button) return;
+        const action = button.dataset.action;
+
+        if (action === "go") go(button.dataset.route, button.dataset.value);
+        if (action === "notify") toast("새 알림은 없습니다.");
+        if (action === "category") {
+          state.filters.category = button.dataset.category;
+          saveState();
+          render();
+        }
+        if (action === "topic") {
+          state.communityTopic = button.dataset.topic;
+          saveState();
+          render();
+        }
+        if (action === "favorite") toggleFavorite(button.dataset.id);
+        if (action === "start-chat") startChat(button.dataset.id);
+        if (action === "open-deal-panel") openDealPanel(button.dataset.id, button.dataset.panel);
+        if (action === "complete-trade") completeTrade(button.dataset.id);
+        if (action === "report") reportTarget(button.dataset.target, button.dataset.id);
+        if (action === "block") blockUser(button.dataset.id);
+        if (action === "delete-listing") deleteListing(button.dataset.id);
+        if (action === "logout") logout();
+        if (action === "reset-demo") resetDemo();
+        if (action === "admin-resolve") resolveReport(button.dataset.id);
+        if (action === "admin-hide") adminHide(button.dataset.id, button.dataset.report);
+      });
+
+      function createListing(form) {
+        if (!requireLogin()) return;
+        const user = currentUser();
+        const title = form.elements.title.value.trim();
+        const price = Number(form.elements.price.value.replace(/[^\d]/g, ""));
+        const category = form.elements.category.value;
+        const image = form.elements.image.value.trim() || fallbackImages[category] || fallbackImages["생활"];
+        const description = form.elements.description.value.trim();
+
+        if (!title || !description || !Number.isFinite(price)) {
+          toast("상품 정보를 확인해주세요.");
+          return;
+        }
+
+        const listing = {
+          id: `p${Date.now()}`,
+          title,
+          description,
+          price,
+          category,
+          image,
+          neighborhood: user.neighborhood,
+          sellerId: user.id,
+          status: "ACTIVE",
+          favoriteIds: [],
+          createdAt: Date.now()
+        };
+        state.listings.unshift(listing);
+        saveState();
+        toast("상품을 등록했습니다.");
+        go("product", listing.id);
+      }
+
+      function createPost(form) {
+        if (!requireLogin()) return;
+        const user = currentUser();
+        const title = form.elements.title.value.trim();
+        const body = form.elements.body.value.trim();
+        const topic = form.elements.topic.value;
+        if (!title || !body) {
+          toast("글 내용을 입력해주세요.");
+          return;
+        }
+        state.posts.unshift({
+          id: `c${Date.now()}`,
+          title,
+          body,
+          topic,
+          neighborhood: user.neighborhood,
+          authorId: user.id,
+          createdAt: Date.now()
+        });
+        saveState();
+        form.reset();
+        toast("글을 올렸습니다.");
+        render();
+      }
+
+      function sendMessage(form) {
+        if (!requireLogin()) return;
+        const text = form.elements.body.value.trim();
+        const thread = state.chats.find((item) => item.id === form.dataset.id);
+        if (!text || !thread) return;
+        thread.messages.push({ id: `m${Date.now()}`, senderId: currentUser().id, body: text, createdAt: Date.now() });
+        thread.updatedAt = Date.now();
+        saveState();
+        render();
+      }
+
+      function pushSystemMessage(thread, body) {
+        thread.messages.push({
+          id: `m${Date.now()}${Math.random().toString(16).slice(2)}`,
+          senderId: "system",
+          body,
+          createdAt: Date.now()
+        });
+        thread.updatedAt = Date.now();
+      }
+
+      function openDealPanel(threadId, type) {
+        if (!requireLogin()) return;
+        state.tradePanel = { threadId, type };
+        saveState();
+        render();
+      }
+
+      function saveAppointment(form) {
+        if (!requireLogin()) return;
+        const thread = state.chats.find((item) => item.id === form.dataset.id);
+        if (!thread) return;
+
+        const time = form.elements.time.value;
+        const place = form.elements.place.value.trim();
+        const memo = form.elements.memo.value.trim();
+        if (!time || !place) {
+          toast("약속 시간과 장소를 입력해주세요.");
+          return;
+        }
+
+        thread.appointment = {
+          time,
+          place,
+          memo,
+          createdAt: Date.now(),
+          createdBy: currentUser().id
+        };
+        pushSystemMessage(thread, `거래 약속이 잡혔습니다. ${formatDateTime(time)} · ${place}${memo ? ` · ${memo}` : ""}`);
+        state.tradePanel = null;
+        saveState();
+        toast("거래 약속을 저장했습니다.");
+        render();
+      }
+
+      function sendPayment(form) {
+        if (!requireLogin()) return;
+        const user = currentUser();
+        const thread = state.chats.find((item) => item.id === form.dataset.id);
+        if (!thread) return;
+        if (thread.buyerId !== user.id) {
+          toast("구매자만 송금할 수 있습니다.");
+          return;
+        }
+
+        const amount = Number(form.elements.amount.value.replace(/[^\d]/g, ""));
+        const method = form.elements.method.value;
+        if (!Number.isFinite(amount) || amount <= 0) {
+          toast("송금 금액을 확인해주세요.");
+          return;
+        }
+
+        thread.payment = {
+          amount,
+          method,
+          status: "PAID",
+          payerId: user.id,
+          createdAt: Date.now()
+        };
+        pushSystemMessage(thread, `${formatPrice(amount)} 송금이 완료되었습니다. 방식: ${method}`);
+        state.tradePanel = null;
+        saveState();
+        toast("송금 완료로 기록했습니다.");
+        render();
+      }
+
+      function completeTrade(threadId) {
+        if (!requireLogin()) return;
+        const user = currentUser();
+        const thread = state.chats.find((item) => item.id === threadId);
+        if (!thread) return;
+        if (thread.buyerId !== user.id && thread.sellerId !== user.id) {
+          toast("거래 참여자만 완료할 수 있습니다.");
+          return;
+        }
+
+        const listing = listingById(thread.listingId);
+        if (listing) listing.status = "SOLD";
+        thread.completedAt = Date.now();
+        pushSystemMessage(thread, "거래가 완료되었습니다.");
+        state.tradePanel = null;
+        saveState();
+        toast("거래를 완료했습니다.");
+        render();
+      }
+
+      function saveUser(form) {
+        const user = currentUser();
+        if (!user) return;
+        user.name = form.elements.name.value.trim() || user.name;
+        user.neighborhood = form.elements.neighborhood.value;
+        state.filters.neighborhood = user.neighborhood;
+        saveState();
+        toast("내 정보를 저장했습니다.");
+        render();
+      }
+
+      function login(form) {
+        const email = form.elements.email.value.trim().toLowerCase();
+        const password = form.elements.password.value;
+        const user = state.users.find((item) => item.email.toLowerCase() === email && item.password === password);
+        if (!user) {
+          toast("로그인 정보를 확인해주세요.");
+          return;
+        }
+        state.currentUserId = user.id;
+        state.filters.neighborhood = user.neighborhood;
+        saveState();
+        toast("로그인했습니다.");
+        go("home");
+      }
+
+      function register(form) {
+        const name = form.elements.name.value.trim();
+        const email = form.elements.email.value.trim().toLowerCase();
+        const password = form.elements.password.value;
+        const neighborhood = form.elements.neighborhood.value;
+        if (password.length < 8) {
+          toast("비밀번호는 8자 이상이어야 합니다.");
+          return;
+        }
+        if (state.users.some((user) => user.email.toLowerCase() === email)) {
+          toast("이미 가입된 이메일입니다.");
+          return;
+        }
+        const user = {
+          id: `u${Date.now()}`,
+          name,
+          email,
+          password,
+          role: "USER",
+          avatarColor: "#0f766e",
+          neighborhood
+        };
+        state.users.push(user);
+        state.currentUserId = user.id;
+        state.filters.neighborhood = neighborhood;
+        saveState();
+        toast("회원가입했습니다.");
+        go("home");
+      }
+
+      function logout() {
+        state.currentUserId = null;
+        saveState();
+        toast("로그아웃했습니다.");
+        render();
+      }
+
+      function toggleFavorite(id) {
+        if (!requireLogin()) return;
+        const listing = listingById(id);
+        const user = currentUser();
+        if (!listing || !user) return;
+        const exists = listing.favoriteIds.includes(user.id);
+        listing.favoriteIds = exists ? listing.favoriteIds.filter((value) => value !== user.id) : [...listing.favoriteIds, user.id];
+        saveState();
+        toast(exists ? "관심에서 해제했습니다." : "관심 상품에 저장했습니다.");
+        render();
+      }
+
+      function startChat(listingId) {
+        if (!requireLogin()) return;
+        const user = currentUser();
+        const listing = listingById(listingId);
+        if (!listing) return;
+        if (listing.sellerId === user.id) {
+          toast("내 상품에는 채팅을 시작할 수 없습니다.");
+          return;
+        }
+        let thread = state.chats.find((item) => item.listingId === listingId && item.buyerId === user.id && item.sellerId === listing.sellerId);
+        if (!thread) {
+          thread = {
+            id: `t${Date.now()}`,
+            listingId,
+            buyerId: user.id,
+            sellerId: listing.sellerId,
+            messages: [{ id: `m${Date.now()}`, senderId: user.id, body: "안녕하세요. 아직 거래 가능할까요?", createdAt: Date.now() }],
+            appointment: null,
+            payment: null,
+            completedAt: null,
+            updatedAt: Date.now()
+          };
+          state.chats.push(thread);
+          saveState();
+        }
+        go("chat", thread.id);
+      }
+
+      function reportTarget(targetType, targetId) {
+        if (!requireLogin()) return;
+        const reason = prompt("신고 사유를 입력해주세요.");
+        if (!reason) return;
+        state.reports.push({
+          id: `r${Date.now()}`,
+          targetType,
+          targetId,
+          reporterId: currentUser().id,
+          reason,
+          resolved: false,
+          createdAt: Date.now()
+        });
+        saveState();
+        toast("신고가 접수되었습니다.");
+        render();
+      }
+
+      function blockUser(id) {
+        if (!requireLogin()) return;
+        if (id === currentUser().id) {
+          toast("본인은 차단할 수 없습니다.");
+          return;
+        }
+        state.blockedIds = Array.from(new Set([...(state.blockedIds || []), id]));
+        saveState();
+        toast("사용자를 차단했습니다.");
+        go("home");
+      }
+
+      function deleteListing(id) {
+        const listing = listingById(id);
+        if (!listing) return;
+        if (!confirm("상품을 삭제할까요?")) return;
+        listing.status = "HIDDEN";
+        saveState();
+        toast("상품을 삭제했습니다.");
+        go("home");
+      }
+
+      function resetDemo() {
+        if (!confirm("데모 데이터를 처음 상태로 되돌릴까요?")) return;
+        state = structuredClone(seed);
+        saveState();
+        toast("데모 데이터를 초기화했습니다.");
+        go("home");
+      }
+
+      function resolveReport(id) {
+        const report = state.reports.find((item) => item.id === id);
+        if (report) report.resolved = true;
+        saveState();
+        toast("신고를 처리했습니다.");
+        render();
+      }
+
+      function adminHide(listingId, reportId) {
+        const listing = listingById(listingId);
+        if (listing) listing.status = "HIDDEN";
+        const report = state.reports.find((item) => item.id === reportId);
+        if (report) report.resolved = true;
+        saveState();
+        toast("상품을 숨김 처리했습니다.");
+        render();
+      }
+
+      window.addEventListener("hashchange", render);
+      render();
+    </script>
+  </body>
+</html>
